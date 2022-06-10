@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from pydantic import BaseModel
 import redis
 
@@ -17,7 +17,7 @@ class Item(BaseModel):
 # If the item is found, the value of the item is returned
 # If the item is not found, a 404 error is returned
 @app.get("/api/cache")
-async def cache(key: str = False):
+async def cache(response: Response, key: str = False):
     if not key:
         raise HTTPException(status_code=400, detail="key query parameter is required")
 
@@ -27,8 +27,11 @@ async def cache(key: str = False):
     # If the item is not found, return a 404 error
     if not cache:
         raise HTTPException(status_code=404, detail="key not found")
-    
-    # If the item is found, return the value of the item
+
+    # Set the X-CACHE-TTL header for when the item expires
+    response.headers["X-CACHE-TTL"] = str(red.ttl(key))
+
+    # Return the value of the item
     return cache
 
 # Endpoint to add an item to the in-memory redis cache
