@@ -4,6 +4,7 @@ import redis
 
 app = FastAPI()
 red = redis.Redis(host='redis', port=6379)
+TTL = 300 # 5 minutes
 
 # A schema for storing items in the in-memory cache
 # key: The base64 encoded graphql query
@@ -39,6 +40,9 @@ async def cache(item: Item):
 
     # Add the item to the cache
     red.set(item.key, item.value)
+
+    # Set the expiration of the item in the cache
+    red.expire(item.key, TTL)
 
     return {"message": "cached"}
 
