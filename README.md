@@ -1,19 +1,40 @@
 # cache ♻️
 
-A caching service using [Caddy](https://caddyserver.com/) + [FastAPI](https://fastapi.tiangolo.com/) with docker-compose
+A caching service using [Caddy](https://caddyserver.com/) + [FastAPI](https://fastapi.tiangolo.com/) + [Redis](https://redis.io/) with docker-compose
+
+This service is used to cache all GraphQL responses from the main Tarkov API in order to provide maximum performance ⚡
 
 ## Usage 🔨
 
-To use this repo simply do the following:
+To use this repo do the following:
 
 1. Clone the repo
-1. Run the following command:
+2. Run the following command:
 
     ```bash
     docker-compose up --build
     ```
 
-1. Navigate to your domain: [localhost](https://localhost:443/)
+3. Create a request to the cache endpoint to set an item in the cache:
+
+    ```bash
+    curl --location --request POST 'http://localhost/api/cache' \
+    --header 'Content-Type: application/json' \
+    --data-raw '{
+        "key": "mycoolquery",
+        "value": "fake response"
+    }'
+    ```
+
+4. Create a request to retrieve the item you just placed in the cache:
+
+    ```bash
+    curl --location --request GET 'http://localhost/api/cache?key=mycoolquery' \
+    --header 'Content-Type: application/json' \
+    --data-raw '{}'
+    ```
+
+5. As an added bonus, inspect your response headers to see how much longer the item will live in the cached before it expires and the request returns a 404 (`X-CACHE-TTL`)
 
 That's it!
 
@@ -43,12 +64,13 @@ Here is some extra info about the setup
 
 ### Volumes 🛢️
 
-The docker-compose file creates two volumes:
+The docker-compose file creates three volumes:
 
 - `./data/caddy_data:/data`
 - `./data/caddy_config:/config`
+- `./data/redis:/data`
 
-The config volume is used to mount Caddy configuration
+The config volume is used to mount Caddy configuration and Redis data
 
 The data volume is used to store certificate information. This is really important so that you are not re-requesting TLS certs each time you start your container. Doing so can cause you to hit Let's Encrypt rate limits that will prevent you from provisioning certificates.
 
