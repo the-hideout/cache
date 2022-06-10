@@ -2,7 +2,27 @@
 
 A caching service using [Caddy](https://caddyserver.com/) + [FastAPI](https://fastapi.tiangolo.com/) + [Redis](https://redis.io/) with docker-compose
 
-This service is used to cache all GraphQL responses from the main Tarkov API in order to provide maximum performance ⚡
+This service is used to cache all GraphQL responses from the main [Tarkov API](https://github.com/the-hideout/tarkov-api) in order to provide maximum performance ⚡
+
+## About ⭐
+
+This service exists to cache all response from the [Tarkov API](https://github.com/the-hideout/tarkov-api) for performance and to reduce load on our cloudflare workers.
+
+This service caches requests only for a short period of time in order to keep data fresh and response times low.
+
+### How it Works 📚
+
+This service works by doing the following:
+
+- Recieving requests to save a graphql query in its in-memory cache (redis)
+- Serving requests for cached graphql queries from its in-memory cache (redis)
+- Expiring cached items at a fixed interval so they can be refreshed
+
+Traffic flow:
+
+1. Request hits the reverse proxy (caddy)
+2. The request is routed to the backend caching service (FastAPI)
+3. The request can either be a GET (retrieves from the cache) or a POST (saves to the cache)
 
 ## Usage 🔨
 
