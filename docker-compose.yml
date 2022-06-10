@@ -1,6 +1,15 @@
 # To build the entire stack run 'make run'
 
 services:
+  redis:
+    container_name: redis
+    image: redis:alpine3.16
+    ports:
+      - 6379:6379
+    volumes:
+      - ./data/redis:/data
+    restart: unless-stopped
+
   fastapi:
     container_name: fastapi
     restart: unless-stopped
@@ -15,6 +24,8 @@ services:
       timeout: 5s
       retries: 3
       start_period: 15s
+    depends_on:
+      - redis
 
   caddy:
     container_name: caddy
