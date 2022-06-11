@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: GrantBirki/branch-deploy@v1.5.0
+      - uses: GrantBirki/branch-deploy@35cce77afd4fafcda2d28c861fc85cddbcec67f0 # pin@v1.5.0
         id: branch-deploy
 
       - name: Checkout
