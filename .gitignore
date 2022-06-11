@@ -5,3 +5,8 @@ creds.env
 # container volume files
 data/*
 !data/.gitkeep
+
+# Terraform
+terraform.auto.tfvars.json
+terraform/.terraform/providers
+**/.terraform/*
