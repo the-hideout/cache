@@ -3,6 +3,6 @@
 cd ~/cache
 
 git fetch --all
-git reset --hard origin/main
+git reset --hard origin/$1
 
 sudo -E bash -c 'make run'
