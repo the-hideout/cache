@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   deploy:
-    environment: secrets
+    environment: production-secrets
     if: ${{ github.event.issue.pull_request }} # only run on pull request comments
     runs-on: ubuntu-latest
 
