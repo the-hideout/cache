@@ -38,6 +38,7 @@ jobs:
           cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
 
       - name: Terraform init
+        id: init
         if: ${{ steps.branch-deploy.outputs.continue == 'true' }}
         working-directory: terraform/
         run: terraform init
