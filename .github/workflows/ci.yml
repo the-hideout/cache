@@ -44,4 +44,4 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script_stop: true
-          script: DOMAIN=cache.tarkov.dev ~/cache/script/deploy
+          script: DOMAIN=cache.tarkov.dev ~/cache/script/deploy main
