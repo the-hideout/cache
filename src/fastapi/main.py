@@ -1,10 +1,15 @@
 from fastapi import FastAPI, HTTPException, Response
 from pydantic import BaseModel
 import redis
+import json
+
+# Read the json config file and load it into a dictionary
+with open('config.json') as config_file:
+    config = json.load(config_file)
 
 app = FastAPI()
-red = redis.Redis(host='redis', port=6379)
-TTL = 300 # 5 minutes
+red = redis.Redis(host=config['redis_host'], port=config['redis_port'])
+TTL = config['ttl']
 
 # A schema for storing items in the in-memory cache
 # key: The base64 encoded graphql query
