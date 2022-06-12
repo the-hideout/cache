@@ -9,6 +9,8 @@ services:
     volumes:
       - ./data/redis:/data
     restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
 
   fastapi:
     container_name: fastapi
@@ -20,7 +22,7 @@ services:
       - 8000:8000
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 5m
+      interval: 30s
       timeout: 5s
       retries: 3
       start_period: 15s
@@ -45,6 +47,12 @@ services:
       PROXY_BACKEND: fastapi
       PROXY_PORT: 8000
       DOMAIN: ${DOMAIN}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/caddy-health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
 
 volumes:
   caddy_data:
