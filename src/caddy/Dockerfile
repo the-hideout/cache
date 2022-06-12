@@ -1,5 +1,8 @@
 FROM caddy/caddy:2.5.1-alpine
 
+# Add curl for healthchecks
+RUN apk add curl
+
 RUN mkdir /app
 COPY start.sh /app/start.sh
 
