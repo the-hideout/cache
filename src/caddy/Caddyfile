@@ -11,5 +11,7 @@
 		{$BASIC_AUTH_USER} {$BASIC_AUTH_PASS}
 	}
 
-	encode gzip
+	encode {
+		gzip 9
+	}
 }
