@@ -33,8 +33,14 @@ async def cache(response: Response, key: str = False):
     if not cache:
         raise HTTPException(status_code=404, detail="key not found")
 
+    # Get the items TTL in Redis
+    item_ttl = red.ttl(key)
+
     # Set the X-CACHE-TTL header for when the item expires
-    response.headers["X-CACHE-TTL"] = str(red.ttl(key))
+    response.headers["X-CACHE-TTL"] = str(item_ttl)
+    
+    # Set a cache-control header to ensure the item is cached
+    response.headers["Cache-Control"] = f"public, max-age={item_ttl}"
 
     # Return the value of the item
     return cache
