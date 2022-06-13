@@ -1,5 +1,7 @@
 # cache ♻️
 
+test
+
 A caching service using [Caddy](https://caddyserver.com/) + [FastAPI](https://fastapi.tiangolo.com/) + [Redis](https://redis.io/) with docker-compose
 
 This service is used to cache all GraphQL responses from the main [Tarkov API](https://github.com/the-hideout/tarkov-api) in order to provide maximum performance ⚡
