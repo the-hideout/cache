@@ -57,7 +57,3 @@ async def cache(item: Item):
 @app.get("/health")
 async def health():
     return "OK"
-
-@app.get("/test")
-async def test():
-    return "test"
