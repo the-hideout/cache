@@ -6,9 +6,9 @@ git fetch --all
 git reset --hard origin/$1
 
 echo "[-] Killing old docker processes"
-sudo DOMAIN=$DOMAIN BASIC_AUTH_USER=$BASIC_AUTH_USER BASIC_AUTH_PASS=$BASIC_AUTH_PASS docker-compose down -v -t 1
+sudo -E bash -c 'source ~/.profile && docker-compose down -v -t 1'
 
 echo "[i] Building docker containers"
-sudo DOMAIN=$DOMAIN BASIC_AUTH_USER=$BASIC_AUTH_USER BASIC_AUTH_PASS=$BASIC_AUTH_PASS docker-compose up --build -d
+sudo -E bash -c 'source ~/.profile && docker-compose up --build -d'
 
 echo "[+] Containers are now running!"
