@@ -38,14 +38,10 @@ jobs:
 
       - name: SSH Remote Deploy
         uses: appleboy/ssh-action@1d1b21ca96111b1eb4c03c21c14ebb971d2200f6 # pin@v0.1.4
-        env:
-          DOMAIN: "cache.tarkov.dev"
-          BASIC_AUTH_USER: ${{ secrets.BASIC_AUTH_USER }}
-          BASIC_AUTH_PASS: ${{ secrets.BASIC_AUTH_PASS }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script_stop: true
-          script: DOMAIN=$DOMAIN BASIC_AUTH_USER=$BASIC_AUTH_USER BASIC_AUTH_PASS=$BASIC_AUTH_PASS ~/cache/script/deploy main
+          script: ~/cache/script/deploy main
