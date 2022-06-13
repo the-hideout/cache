@@ -5,4 +5,10 @@ cd ~/cache
 git fetch --all
 git reset --hard origin/$1
 
-sudo -E bash -c 'make run'
+echo "[#] Killing old docker processes"
+sudo DOMAIN=$DOMAIN BASIC_AUTH_USER=$BASIC_AUTH_USER BASIC_AUTH_PASS=$BASIC_AUTH_PASS docker-compose down -v -t 1
+
+echo "[#] Building docker containers"
+sudo DOMAIN=$DOMAIN BASIC_AUTH_USER=$BASIC_AUTH_USER BASIC_AUTH_PASS=$BASIC_AUTH_PASS docker-compose up --build -d
+
+echo "[#] Containers are now running!"
