@@ -7,7 +7,7 @@
 		respond "OK"
 	}
 
-  	basicauth /api/* {
-	  	{$BASIC_AUTH_USER} {$BASIC_AUTH_PASS}
-  	}
+	basicauth /api/* {
+		{$BASIC_AUTH_USER} {$BASIC_AUTH_PASS}
+	}
 }
