@@ -92,7 +92,7 @@ The docker-compose file creates three volumes:
 
 The config volume is used to mount Caddy configuration and Redis data
 
-The data volume is used to store certificate information. This is really important so that you are not re-requesting TLS certs each time you start your container. Doing so can cause you to hit Let's Encrypt rate limits that will prevent you from provisioning certificates.
+The data volume is used to store certificate information. This is really important so that you are not re-requesting TLS certs each time you start your container. Doing so can cause you to hit Let's Encrypt rate limits that will prevent you from provisioning certificates
 
 ### Environment Variables 📝
 
