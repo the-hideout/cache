@@ -47,6 +47,8 @@ services:
       PROXY_BACKEND: fastapi
       PROXY_PORT: 8000
       DOMAIN: ${DOMAIN}
+      BASIC_AUTH_USER: ${BASIC_AUTH_USER}
+      BASIC_AUTH_PASS: ${BASIC_AUTH_PASS}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/caddy-health"]
       interval: 30s

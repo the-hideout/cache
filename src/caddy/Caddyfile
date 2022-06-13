@@ -6,4 +6,8 @@
 	handle /caddy-health {
 		respond "OK"
 	}
+
+  	basicauth /api/* {
+	  	{$BASIC_AUTH_USER} {$BASIC_AUTH_PASS}
+  	}
 }
