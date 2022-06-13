@@ -119,10 +119,15 @@ jobs:
       - name: SSH Remote Deploy
         if: ${{ steps.branch-deploy.outputs.continue == 'true' && steps.branch-deploy.outputs.noop != 'true' }}
         uses: appleboy/ssh-action@1d1b21ca96111b1eb4c03c21c14ebb971d2200f6 # pin@v0.1.4
+        env:
+          DOMAIN: "cache.tarkov.dev"
+          BASIC_AUTH_USER: ${{ secrets.BASIC_AUTH_USER }}
+          BASIC_AUTH_PASS: ${{ secrets.BASIC_AUTH_PASS }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
+          envs: DOMAIN,BASIC_AUTH_USER,BASIC_AUTH_PASS
           script_stop: true
-          script: DOMAIN=cache.tarkov.dev ~/cache/script/deploy ${{ steps.branch-deploy.outputs.ref }}
+          script: ~/cache/script/deploy ${{ steps.branch-deploy.outputs.ref }}
