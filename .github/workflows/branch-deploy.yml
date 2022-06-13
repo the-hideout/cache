@@ -128,6 +128,5 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          envs: DOMAIN,BASIC_AUTH_USER,BASIC_AUTH_PASS
           script_stop: true
-          script: ~/cache/script/deploy ${{ steps.branch-deploy.outputs.ref }}
+          script: DOMAIN=$DOMAIN BASIC_AUTH_USER=$BASIC_AUTH_USER BASIC_AUTH_PASS=$BASIC_AUTH_PASS ~/cache/script/deploy ${{ steps.branch-deploy.outputs.ref }}
