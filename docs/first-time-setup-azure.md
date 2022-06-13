@@ -37,7 +37,15 @@ The very first time you go to build this application in production for Azure you
 1. Run `source ~/.profile` to update env vars (if `echo $DOMAIN` isn't set)
 
 1. Optionally, create a DNS record that points to the VM's public IP address
+1. SSH to the VM and set the desired basic auth user and password to protect the API endpoints - [caddy docs](https://caddyserver.com/docs/caddyfile/directives/basicauth)
 
+    ```bash
+    # something like this...
+    echo "export BASIC_AUTH_USER=$<value>" >> ~/.profile
+    echo "export BASIC_AUTH_USER=$<hashed_value>" >> ~/.profile # see caddy docs above for hashed value
+    ```
+
+1. Make sure to add both the basic auth values you set above as encrypted secrets in the cloudflare workers as well!
 1. Start your container stack `script/deploy`
 
 ## TLS
