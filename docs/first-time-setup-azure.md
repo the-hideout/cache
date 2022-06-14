@@ -45,6 +45,7 @@ The very first time you go to build this application in production for Azure you
     echo "export BASIC_AUTH_USER=$<hashed_value>" >> ~/.profile # see caddy docs above for hashed value
     ```
 
+1. If you are using promtail, ssh to the VM and add the secret `LOKI_PUSH_URL` to the `~/.profile` file
 1. Make sure to add both the basic auth values you set above as encrypted secrets in the cloudflare workers as well!
 1. Start your container stack `script/deploy`
 
