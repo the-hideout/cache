@@ -5,6 +5,8 @@ WORKDIR /app
 # Install curl for healthchecks
 RUN apk add curl
 
+RUN echo "hello world"
+
 # Create the log file
 RUN touch /app/logfile.log
 
