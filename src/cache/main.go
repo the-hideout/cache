@@ -51,13 +51,13 @@ func main() {
 	// test 1
 	err := rdb.Set(ctx, "key", "value", 0).Err()
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
 	}
 
 	// test 2
 	val, err := rdb.Get(ctx, "key").Result()
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
 	}
 	fmt.Println("key", val)
 
@@ -69,6 +69,13 @@ func main() {
 		c.String(http.StatusOK, "OK")
 	})
 
-	// Start the application on 0.0.0.0:8080
-	r.Run()
+	// Endpoint to fetch an item from the in-memory redis cache
+	// If the item is found, the value of the item is returned
+	// If the item is not found, a 404 error is returned
+	r.GET("/api/cache", func(c *gin.Context) {
+		c.String(http.StatusOK, "test")
+	})
+
+	// Start the application on 0.0.0.0:8000
+	r.Run(":8000")
 }

@@ -18,5 +18,6 @@ USER nonroot
 WORKDIR /app
 
 COPY --from=builder /app/cache .
+COPY --chown=nonroot:nonroot config.json .
 
 CMD ["./cache"]
