@@ -12,14 +12,14 @@ services:
     healthcheck:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
 
-  fastapi:
-    container_name: fastapi
+  cache:
+    container_name: cache
     restart: unless-stopped
     build:
-      context: ./src/fastapi
+      context: ./src/cache
       dockerfile: ./Dockerfile
     ports:
-      - 8000:8000
+      - 8000:8080
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -28,8 +28,6 @@ services:
       start_period: 15s
     depends_on:
       - redis
-    volumes:
-      - log-volume:/app
 
   caddy:
     container_name: caddy
@@ -44,9 +42,9 @@ services:
       - ./data/caddy_data:/data
       - ./data/caddy_config:/config
     depends_on:
-      - fastapi
+      - cache
     environment:
-      PROXY_BACKEND: fastapi
+      PROXY_BACKEND: cache
       PROXY_PORT: 8000
       DOMAIN: ${DOMAIN}
       BASIC_AUTH_USER: ${BASIC_AUTH_USER}
@@ -58,19 +56,6 @@ services:
       retries: 3
       start_period: 15s
 
-  promtail:
-    container_name: promtail
-    image: grafana/promtail:2.4.2
-    volumes:
-      - log-volume:/app:ro
-      - ./src/promtail/config.yml:/etc/promtail/config.yml
-    command: ["-config.expand-env=true", "-config.file=/etc/promtail/config.yml"]
-    depends_on:
-      - fastapi
-    environment:
-      LOKI_PUSH_URL: ${LOKI_PUSH_URL}
-
 volumes:
   caddy_data:
   caddy_config:
-  log-volume:
