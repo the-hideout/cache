@@ -23,9 +23,6 @@ RUN pip install --user --no-cache-dir --upgrade -r requirements.txt
 # Copy the app
 COPY main.py /app/main.py
 
-# Copy the log config
-COPY log.ini /app/log.ini
-
 # Copy the config
 COPY config.json /app/config.json
 
