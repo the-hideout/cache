@@ -86,6 +86,19 @@ func main() {
 			return
 		}
 
+		// Get the items TTL in Redis
+		item_ttl, err := rdb.TTL(ctx, key).Result()
+		if err != nil {
+			c.String(http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		//Set the X-CACHE-TTL header for when the item expires
+		c.Header("X-CACHE-TTL", fmt.Sprintf("%.0f", item_ttl.Seconds()))
+
+		// Set a cache-control header to ensure the item is cached
+		c.Header("Cache-Control", fmt.Sprintf("public, max-age=%d", int(item_ttl.Seconds())))
+
 		// Return the value of the item from the cache
 		c.String(http.StatusOK, val)
 	})
