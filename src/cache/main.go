@@ -14,6 +14,9 @@ import (
 	"github.com/go-redis/redis/v9"
 )
 
+// A schema for storing items in the in-memory cache
+// key: The base64 encoded graphql query
+// value: The graphql response for the given query
 type CacheSetBody struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
@@ -25,7 +28,7 @@ func config() map[string]interface{} {
 	// Read config file
 	configFile, err := os.Open("config.json")
 	if err != nil {
-		os.Exit(1)
+		panic(err)
 	}
 	defer configFile.Close()
 
