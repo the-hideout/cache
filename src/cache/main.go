@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"context"
 	"encoding/json"
@@ -12,6 +13,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v9"
 )
+
+type CacheSetBody struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
+}
 
 var ctx = context.Background()
 
@@ -48,19 +54,6 @@ func main() {
 		DB:       0,  // use default DB
 	})
 
-	// test 1
-	err := rdb.Set(ctx, "key", "value", 0).Err()
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	// test 2
-	val, err := rdb.Get(ctx, "key").Result()
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println("key", val)
-
 	// Create a new gin router
 	r := gin.Default()
 
@@ -73,7 +66,56 @@ func main() {
 	// If the item is found, the value of the item is returned
 	// If the item is not found, a 404 error is returned
 	r.GET("/api/cache", func(c *gin.Context) {
-		c.String(http.StatusOK, "test")
+		// Get and validate the key query string parameter
+		key := c.DefaultQuery("key", "")
+		if key == "" {
+			c.String(http.StatusBadRequest, "key query parameter is required")
+			return
+		}
+
+		// Check the cache for the key
+		val, err := rdb.Get(ctx, key).Result()
+
+		// If the item is not found, return a 404 error
+		if err == redis.Nil {
+			c.String(http.StatusNotFound, "key not found")
+			return
+			// If something else went wrong, return a 500 error
+		} else if err != nil {
+			c.String(http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		// Return the value of the item from the cache
+		c.String(http.StatusOK, val)
+	})
+
+	// Endpoint to add an item to the in-memory redis cache
+	// If the item is successfully added, return a success message
+	r.POST("/api/cache", func(c *gin.Context) {
+		var requestBody CacheSetBody
+
+		// Parse and validate the request body
+		if err := c.BindJSON(&requestBody); err != nil {
+			c.String(http.StatusBadRequest, "payload is required")
+			return
+		}
+		if requestBody.Key == "" || requestBody.Value == "" {
+			c.String(http.StatusBadRequest, "key and value params are required in payload body")
+			return
+		}
+
+		// Fetch TTL from config file and convert it into a time.Duration in seconds
+		ttl := time.Duration(int(config["ttl"].(float64))) * time.Second
+
+		// Add the item to the cache
+		err := rdb.Set(ctx, requestBody.Key, requestBody.Value, ttl).Err()
+		if err != nil {
+			c.String(http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "cached"})
 	})
 
 	// Start the application on 0.0.0.0:8000
