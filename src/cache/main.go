@@ -103,7 +103,7 @@ func main() {
 		c.Header("Cache-Control", fmt.Sprintf("public, max-age=%d", int(item_ttl.Seconds())))
 
 		// Return the value of the item from the cache
-		c.String(http.StatusOK, val)
+		c.JSON(http.StatusOK, val)
 	})
 
 	// Endpoint to add an item to the in-memory redis cache
