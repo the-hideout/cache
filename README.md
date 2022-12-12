@@ -80,7 +80,7 @@ Caddy automatically provisions TLS certificates for you. In order to make use of
 
 ## Extra Info 📚
 
-Here is some extra info about the setup
+Here is some extra info about the setup!
 
 ### Volumes 🛢️
 
