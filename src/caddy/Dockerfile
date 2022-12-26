@@ -1,4 +1,4 @@
-FROM caddy/caddy:2.5.1-alpine
+FROM caddy/caddy:2.6.2-alpine
 
 # Add curl for healthchecks
 RUN apk add curl
