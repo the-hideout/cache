@@ -8,7 +8,7 @@ RUN go mod download
 RUN go mod verify
 RUN go build -o cache
 
-FROM golang:1.19.0-alpine
+FROM golang:1.19.4-alpine
 
 RUN apk add curl
 
