@@ -144,7 +144,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   location              = var.CLOUD_LOCATION
   resource_group_name   = azurerm_resource_group.rg.name
   network_interface_ids = [azurerm_network_interface.nic.id]
-  size                  = "Standard_B1s"
+  size                  = "Standard_B2s"
 
   os_disk {
     name                 = "${var.PROJECT_NAME}_os_disk"

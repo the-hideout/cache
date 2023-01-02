@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: github/branch-deploy@32a0085d9de430d4614bf6ceff687f4cb615f0d6 # pin@v3.1.0
+      - uses: github/branch-deploy@31399807a76e56a3f3bd575bc6e91291d233b4cb # pin@v4.0.0
         id: branch-deploy
         with:
           admins: the-hideout/core-contributors
