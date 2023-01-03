@@ -29,10 +29,10 @@ The very first time you go to build this application in production for Azure you
     1. SSH into the vm
 
         ```bash
-        ssh -i key.pem status@<public_ip_address>
+        ssh -i key.pem cache@<public_ip_address>
         ```
 
-        > status should be the username of the vm. Check the Terraform files to see what the username is.
+        > cache should be the username of the vm. Check the Terraform files to see what the username is.
 
 1. Run `source ~/.profile` to update env vars (if `echo $DOMAIN` isn't set)
 
