@@ -11,6 +11,12 @@ variable "CLOUD_LOCATION" {
 }
 
 
+variable "VM_SIZE" {
+  description = "The size of the VM to deploy"
+  default     = "Standard_B2s"
+  type        = string
+}
+
 # Azure Creds
 variable "CLIENT_SECRET" {
   type = string
