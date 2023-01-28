@@ -121,8 +121,11 @@ func main() {
 			return
 		}
 
-		// Fetch TTL from config file and convert it into a time.Duration in seconds
-		ttl := time.Duration(int(config["ttl"].(float64))) * time.Second
+		ttl := requestBody.ttl
+		if ttl == "" {
+			// Fetch TTL from config file and convert it into a time.Duration in seconds
+			ttl := time.Duration(int(config["ttl"].(float64))) * time.Second
+		}
 
 		// Add the item to the cache
 		err := rdb.Set(ctx, requestBody.Key, requestBody.Value, ttl).Err()
