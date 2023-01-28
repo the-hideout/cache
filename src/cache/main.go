@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v9"
@@ -20,6 +21,7 @@ import (
 type CacheSetBody struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
+	Ttl   string `json:"ttl"`
 }
 
 var ctx = context.Background()
@@ -121,10 +123,29 @@ func main() {
 			return
 		}
 
-		ttl := requestBody.ttl
-		if ttl == "" {
+		// Create the ttl variable to store the TTL of the item
+		var ttl time.Duration
+
+		// Check if the TTL was provided in the request body
+		ttlString := requestBody.Ttl
+
+		if ttlString == "" {
+			// If the TTL was not provided, use the default TTL from the config file
 			// Fetch TTL from config file and convert it into a time.Duration in seconds
-			ttl := time.Duration(int(config["ttl"].(float64))) * time.Second
+			ttl = time.Duration(int(config["ttl"].(float64))) * time.Second
+		} else {
+			// If the TTL was provided, use it
+			// Convert the string representation of the TTL into an integer
+			ttlInt, err := strconv.Atoi(requestBody.Ttl)
+
+			// Throw an error if we can't convert the TTL into an integer
+			if err != nil {
+				c.String(http.StatusBadRequest, "ttl must be an string representation of an integer")
+				return
+			}
+
+			// Convert the TTL into a time.Duration in seconds
+			ttl = time.Duration(int(ttlInt)) * time.Second
 		}
 
 		// Add the item to the cache
