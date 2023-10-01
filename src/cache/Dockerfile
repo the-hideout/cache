@@ -1,4 +1,4 @@
-FROM golang:1.19.4-alpine as builder
+FROM golang:1.21.1-alpine as builder
 
 WORKDIR /app
 
@@ -8,7 +8,7 @@ RUN go mod download
 RUN go mod verify
 RUN go build -o cache
 
-FROM golang:1.19.4-alpine
+FROM golang:1.21.1-alpine
 
 RUN apk add curl
 
