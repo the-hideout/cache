@@ -45,7 +45,7 @@ resource "azurerm_public_ip" "public_ip" {
   name                = "${var.PROJECT_NAME}_public_ip"
   location            = var.CLOUD_LOCATION
   resource_group_name = azurerm_resource_group.rg.name
-  allocation_method   = "Dynamic"
+  allocation_method   = "Static"
 
   tags = {
     managed_by = "terraform"
