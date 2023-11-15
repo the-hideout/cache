@@ -13,7 +13,7 @@ variable "CLOUD_LOCATION" {
 
 variable "VM_SIZE" {
   description = "The size of the VM to deploy"
-  default     = "Standard_B1s"
+  default     = "Standard_B1ms"
   type        = string
 }
 
