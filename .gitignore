@@ -2,6 +2,8 @@ __pycache__
 creds.env
 *.pem
 
+tmp/
+
 # container volume files
 data/*
 !data/.gitkeep
