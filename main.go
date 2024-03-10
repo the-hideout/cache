@@ -87,8 +87,8 @@ func main() {
 	r := gin.Default()
 
 	// Health endpoint
-	r.GET("/health", func(c *gin.Context) {
-		log.Println("request - /health - GET")
+	r.GET("/api/health", func(c *gin.Context) {
+		log.Println("request - /api/health - GET")
 		c.String(http.StatusOK, "OK")
 	})
 
