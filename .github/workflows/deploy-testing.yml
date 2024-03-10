@@ -40,5 +40,5 @@ jobs:
 
       - name: deploy
         run: |
-          func init --worker-runtime custom
+          ./ci/vendor/azure-functions-cli/func init --worker-runtime custom
           ./ci/vendor/azure-functions-cli/func azure functionapp publish tarkov-cache --custom
