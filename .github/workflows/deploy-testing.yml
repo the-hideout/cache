@@ -39,4 +39,6 @@ jobs:
         run: ls -lh "main"
 
       - name: deploy
-        run: ./ci/vendor/azure-functions-cli/func azure functionapp publish tarkov-cache --custom
+        run: |
+          func init --worker-runtime custom
+          ./ci/vendor/azure-functions-cli/func azure functionapp publish tarkov-cache --custom
