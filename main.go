@@ -90,6 +90,13 @@ func main() {
 		WriteTimeout: 5 * time.Second,
 		DB:           0,
 	}
+
+	// if the redis password is 'acceptance-test-password' then we are running in acceptance tests
+	// so we need to unset the tls config
+	if config.RedisPassword == "acceptance-test-password" {
+		opts.TLSConfig = nil
+	}
+
 	// Create a new redis client
 	rdb := redis.NewClient(opts)
 
