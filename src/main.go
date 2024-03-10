@@ -81,13 +81,14 @@ func main() {
 	// If the item is found, the value of the item is returned
 	// If the item is not found, a 404 error is returned
 	r.GET("/api/cache", func(c *gin.Context) {
-		log.Println("request - /api/cache - GET")
 		// Get and validate the key query string parameter
 		key := c.DefaultQuery("key", "")
 		if key == "" {
 			c.String(http.StatusBadRequest, "key query parameter is required")
 			return
 		}
+
+		log.Println("request - /api/cache - GET - key: " + key)
 
 		// Check the cache for the key
 		val, err := rdb.Get(ctx, key).Result()
@@ -124,7 +125,6 @@ func main() {
 	// Endpoint to add an item to the in-memory redis cache
 	// If the item is successfully added, return a success message
 	r.POST("/api/cache", func(c *gin.Context) {
-		log.Println("request - /api/cache - POST")
 		var requestBody CacheSetBody
 
 		// Parse and validate the request body
@@ -136,6 +136,8 @@ func main() {
 			c.String(http.StatusBadRequest, "key and value params are required in payload body")
 			return
 		}
+
+		log.Println("request - /api/cache - POST - key: " + requestBody.Key)
 
 		// Create the ttl variable to store the TTL of the item
 		var ttl time.Duration
