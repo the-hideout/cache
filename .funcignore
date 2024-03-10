@@ -3,3 +3,16 @@
 local.settings.json
 test
 ci/vendor/*
+.dockerignore
+Dockerfile
+docker-compose.yml
+docs
+.github/
+.gitignore
+script/
+tmp/
+LICENSE
+Makefile
+README.md
+SECURITY.md
+
