@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
 	"log"
 	"net/http"
@@ -82,12 +83,21 @@ func main() {
 		log.Fatal("RedisPort must be an integer")
 	}
 
+	opts := &redis.Options{
+		Addr:         fmt.Sprintf("%s:%d", config.RedisHost, redisPort),
+		Password:     config.RedisPassword,
+		TLSConfig:    &tls.Config{MinVersion: tls.VersionTLS12},
+		WriteTimeout: 5 * time.Second,
+		DB:           0,
+	}
 	// Create a new redis client
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%d", config.RedisHost, redisPort),
-		Password: config.RedisPassword,
-		DB:       0, // use default DB
-	})
+	rdb := redis.NewClient(opts)
+
+	ctx := context.Background()
+	redis_err := rdb.Ping(ctx).Err()
+	if redis_err != nil {
+		log.Fatalf("failed to connect with redis instance at %s - %v", config.RedisHost, err)
+	}
 
 	// Create a new gin router
 	r := gin.Default()
