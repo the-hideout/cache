@@ -44,7 +44,10 @@ else
     SUCCESS=1
 fi
 
-curl -s -i --location --request --user cat:dog GET 'http://localhost:8080/api/cache?key=abc' -o response.txt
+curl -s -i --location --request GET 'http://localhost:8080/api/cache?key=abc' \
+--user cat:dog \
+-o response.txt
+
 # Check if the response body equals "123"
 grep -q "\"123\"" response.txt
 if [ $? -eq 0 ]; then
