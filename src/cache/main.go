@@ -47,6 +47,14 @@ func config() map[string]interface{} {
 	return result
 }
 
+func APIPort() string {
+	port := ":8080"
+	if val, ok := os.LookupEnv("FUNCTIONS_CUSTOMHANDLER_PORT"); ok {
+		port = ":" + val
+	}
+	return port
+}
+
 func main() {
 
 	// Load the config file
@@ -158,6 +166,7 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"message": "cached"})
 	})
 
-	// Start the application on 0.0.0.0:8000
-	r.Run(":8000")
+	// Start the application on 0.0.0.0:8080
+	port_info := APIPort()
+	r.Run(port_info)
 }
