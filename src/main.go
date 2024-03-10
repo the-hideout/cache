@@ -7,8 +7,6 @@ import (
 	"time"
 
 	"context"
-	"encoding/json"
-	"io/ioutil"
 	"os"
 	"strconv"
 
@@ -27,25 +25,31 @@ type CacheSetBody struct {
 
 var ctx = context.Background()
 
-func config() map[string]interface{} {
-	// Read config file
-	configFile, err := os.Open("config.json")
-	if err != nil {
-		panic(err)
+type Config struct {
+	RedisHost string
+	RedisPort string
+	Ttl       string
+}
+
+func config() Config {
+	redisHost := os.Getenv("REDIS_HOST")
+	if redisHost == "" {
+		redisHost = "redis"
 	}
-	defer configFile.Close()
+	redisPort := os.Getenv("REDIS_PORT")
+	if redisPort == "" {
+		redisPort = "6379"
+	}
+	ttl := os.Getenv("CACHE_TTL")
+	if ttl == "" {
+		ttl = "300"
+	}
 
-	// Read the config file into bytes
-	byteValue, _ := ioutil.ReadAll(configFile)
-
-	// Define the interface to unmarshal
-	var result map[string]interface{}
-
-	// Parse the bytes into the interface (unstructured data)
-	json.Unmarshal([]byte(byteValue), &result)
-
-	// Return the interface (dict) of values
-	return result
+	return Config{
+		RedisHost: redisHost,
+		RedisPort: redisPort,
+		Ttl:       ttl,
+	}
 }
 
 func APIPort() string {
@@ -57,13 +61,24 @@ func APIPort() string {
 }
 
 func main() {
-
 	// Load the config file
 	config := config()
 
+	// Convert Ttl to an integer
+	configTtl, err := strconv.Atoi(config.Ttl)
+	if err != nil {
+		log.Fatal("TTL must be an integer")
+	}
+
+	// Convert RedisPort to an integer
+	redisPort, err := strconv.Atoi(config.RedisPort)
+	if err != nil {
+		log.Fatal("RedisPort must be an integer")
+	}
+
 	// Create a new redis client
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%.0f", config["redis_host"], config["redis_port"]),
+		Addr:     fmt.Sprintf("%s:%d", config.RedisHost, redisPort),
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	})
@@ -148,7 +163,7 @@ func main() {
 		if ttlString == "" {
 			// If the TTL was not provided, use the default TTL from the config file
 			// Fetch TTL from config file and convert it into a time.Duration in seconds
-			ttl = time.Duration(int(config["ttl"].(float64))) * time.Second
+			ttl = time.Duration(configTtl) * time.Second
 		} else {
 			// If the TTL was provided, use it
 			// Convert the string representation of the TTL into an integer

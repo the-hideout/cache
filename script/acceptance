@@ -1,0 +1,86 @@
+#!/bin/bash
+
+set -e
+
+# COLORS
+OFF='\033[0m'
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+PURPLE='\033[0;35m'
+
+REPO_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
+SUCCESS=0
+
+echo -e "${PURPLE}[#]${OFF} ${BLUE}Killing old docker processes${OFF}"
+docker-compose down --remove-orphans -v -t 1
+docker network prune --force
+docker-compose up --build -d
+
+echo -e "${PURPLE}[#]${OFF} ${BLUE}Running acceptance tests${OFF}"
+
+# run a loop and wait for the cache docker container to be up and running
+for i in {1..300}; do
+  if [ "$(docker inspect -f {{.State.Running}} cache)" == "true" ]; then
+    break
+  fi
+  echo -e "${PURPLE}[#]${OFF} ${BLUE}🕑 Waiting for cache container to be up and running${OFF}"
+  sleep 1
+done
+
+curl -s --location --request POST 'http://localhost:8080/api/cache' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "key": "abc",
+    "value": "123"
+}' -o post_response.txt
+
+# ensure that the response is `{"message":"cached"}`
+grep -q "\"message\":\"cached\"" post_response.txt
+if [ $? -eq 0 ]; then
+    echo "✅ POST Response body is correct"
+else
+    echo "❌ Response body is incorrect"
+    SUCCESS=1
+fi
+
+curl -s -i --location --request GET 'http://localhost:8080/api/cache?key=abc' -o response.txt
+# Check if the response body equals "123"
+grep -q "\"123\"" response.txt
+if [ $? -eq 0 ]; then
+    echo "✅ Response body is correct"
+else
+    echo "❌ Response body is incorrect"
+    SUCCESS=1
+fi
+
+# Check if the headers exist and are not null
+grep -q "X-Cache-Ttl: " response.txt
+if [ $? -eq 0 ]; then
+    echo "✅ X-Cache-Ttl header exists"
+else
+    echo "❌ X-Cache-Ttl header does not exist"
+    SUCCESS=1
+fi
+
+grep -q "Cache-Control: " response.txt
+if [ $? -eq 0 ]; then
+    echo "✅ Cache-Control header exists"
+else
+    echo "❌ Cache-Control header does not exist"
+    SUCCESS=1
+fi
+
+echo -e "${PURPLE}[#]${OFF} ${BLUE}Stopping docker processes${OFF}"
+docker-compose down --remove-orphans -v -t 1
+docker network prune --force
+
+# clean up
+rm response.txt
+rm post_response.txt
+
+if [ $SUCCESS -eq 1 ]; then
+    echo -e "${RED}❌ Acceptance tests failed!${OFF}"
+    exit 1
+fi
+
+echo -e "${GREEN}✅ Acceptance tests complete!${OFF}"

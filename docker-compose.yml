@@ -16,12 +16,13 @@ services:
     container_name: cache
     restart: unless-stopped
     build:
-      context: ./src/cache
+      context: ./src
       dockerfile: ./Dockerfile
     ports:
       - 8080:8080
     environment:
       GIN_MODE: ${GIN_MODE}
+      CACHE_TTL: 300
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
@@ -30,34 +31,3 @@ services:
       start_period: 15s
     depends_on:
       - redis
-
-  caddy:
-    container_name: caddy
-    restart: unless-stopped
-    build:
-      context: ./src/caddy
-      dockerfile: ./Dockerfile
-    ports:
-      - 80:80
-      - 443:443
-    volumes:
-      - ./data/caddy_data:/data
-      - ./data/caddy_config:/config
-    depends_on:
-      - cache
-    environment:
-      PROXY_BACKEND: cache
-      PROXY_PORT: 8080
-      DOMAIN: ${DOMAIN}
-      BASIC_AUTH_USER: ${BASIC_AUTH_USER}
-      BASIC_AUTH_PASS: ${BASIC_AUTH_PASS}
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/caddy-health"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 15s
-
-volumes:
-  caddy_data:
-  caddy_config:
