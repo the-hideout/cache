@@ -9,8 +9,10 @@ services:
     volumes:
       - ./data/redis:/data
     restart: unless-stopped
+    environment:
+      - REDIS_PASSWORD=acceptance-test-password
     healthcheck:
-      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      test: [ "CMD", "redis-cli", "-a", "acceptance-test-password", "--raw", "incr", "ping" ]
 
   cache:
     container_name: cache

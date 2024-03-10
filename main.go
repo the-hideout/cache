@@ -26,9 +26,10 @@ type CacheSetBody struct {
 var ctx = context.Background()
 
 type Config struct {
-	RedisHost string
-	RedisPort string
-	Ttl       string
+	RedisHost     string
+	RedisPort     string
+	RedisPassword string
+	Ttl           string
 }
 
 func config() Config {
@@ -40,15 +41,20 @@ func config() Config {
 	if redisPort == "" {
 		redisPort = "6379"
 	}
+	redisPassword := os.Getenv("REDIS_PASSWORD")
+	if redisPassword == "" {
+		redisPassword = "acceptance-test-password" // only used for acceptance tests
+	}
 	ttl := os.Getenv("CACHE_TTL")
 	if ttl == "" {
 		ttl = "300"
 	}
 
 	return Config{
-		RedisHost: redisHost,
-		RedisPort: redisPort,
-		Ttl:       ttl,
+		RedisHost:     redisHost,
+		RedisPort:     redisPort,
+		RedisPassword: redisPassword,
+		Ttl:           ttl,
 	}
 }
 
@@ -79,8 +85,8 @@ func main() {
 	// Create a new redis client
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%d", config.RedisHost, redisPort),
-		Password: "", // no password set
-		DB:       0,  // use default DB
+		Password: config.RedisPassword,
+		DB:       0, // use default DB
 	})
 
 	// Create a new gin router
