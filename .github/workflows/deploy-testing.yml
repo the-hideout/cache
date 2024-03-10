@@ -34,11 +34,12 @@ jobs:
           unzip -d ci/vendor/azure-functions-cli ci/vendor/Azure.Functions.Cli.linux-x64.zip
           chmod +x ci/vendor/azure-functions-cli/func
           chmod +x ci/vendor/azure-functions-cli/gozip
+          echo "./ci/vendor/azure-functions-cli" >> $GITHUB_PATH
       
       - name: check build
         run: ls -lh "main"
 
       - name: deploy
         run: |
-          ./ci/vendor/azure-functions-cli/func init --worker-runtime custom
-          ./ci/vendor/azure-functions-cli/func azure functionapp publish tarkov-cache --custom
+          func init --worker-runtime custom
+          func azure functionapp publish tarkov-cache --custom
