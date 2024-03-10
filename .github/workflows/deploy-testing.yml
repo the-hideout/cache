@@ -1,0 +1,36 @@
+name: deploy-testing
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-testing:
+    environment: production-secrets
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+
+      - name: build
+        run: GOOS=linux GOARCH=amd64 go build ./main.go
+
+      - uses: azure/login@cb79c773a3cfa27f31f25eb3f677781210c9ce3d # pin@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set up Azure Functions
+        uses: azure/functions-action@v1.5.1
+        with:
+          app-name: tarkov-cache
+          respect-funcignore: true
