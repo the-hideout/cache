@@ -6,7 +6,7 @@ COPY . .
 
 RUN go mod download
 RUN go mod verify
-RUN GOOS=linux GOARCH=amd64 go build -o cache
+RUN GOOS=linux GOARCH=amd64 go build -o main
 
 FROM golang:1.21.1-alpine
 
@@ -17,6 +17,6 @@ USER nonroot
 
 WORKDIR /app
 
-COPY --from=builder /app/cache .
+COPY --from=builder /app/main .
 
-CMD ["./cache"]
+CMD ["./main"]
