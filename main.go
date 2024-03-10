@@ -67,6 +67,22 @@ func APIPort() string {
 	return port
 }
 
+func BasicAuth() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		user, password, hasAuth := c.Request.BasicAuth()
+
+		envUser := os.Getenv("BASIC_AUTH_USER")
+		envPassword := os.Getenv("BASIC_AUTH_PASS")
+
+		if hasAuth && user == envUser && password == envPassword {
+			c.Next()
+		} else {
+			c.Header("WWW-Authenticate", `Basic realm="Restricted"`)
+			c.AbortWithStatus(http.StatusUnauthorized)
+		}
+	}
+}
+
 func main() {
 	// Load the config file
 	config := config()
@@ -108,6 +124,9 @@ func main() {
 
 	// Create a new gin router
 	r := gin.Default()
+
+	// Use basic auth middleware
+	r.Use(BasicAuth())
 
 	// Health endpoint
 	r.GET("/api/health", func(c *gin.Context) {
