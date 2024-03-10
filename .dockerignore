@@ -1,0 +1,12 @@
+script/
+.github/
+docs/
+.gitignore
+docker-compose.yml
+Dockerfile
+host.json
+LICENSE
+README.md
+SECURITY.md
+Makefile
+tmp/
