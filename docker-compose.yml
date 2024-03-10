@@ -25,6 +25,8 @@ services:
     environment:
       GIN_MODE: ${GIN_MODE}
       CACHE_TTL: 300
+      BASIC_AUTH_USER: cat
+      BASIC_AUTH_PASSWORD: dog
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
       interval: 30s
