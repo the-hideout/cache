@@ -43,6 +43,12 @@ jobs:
       #     func init --worker-runtime custom
       #     func azure functionapp publish tarkov-cache --custom
 
+      - name: inject
+        env:
+          STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+        run: |
+          jq --arg connStr "$STORAGE_CONNECTION_STRING" '.Values.AzureWebJobsStorage = $connStr' local.settings.json > temp.json && mv temp.json local.settings.json  
+
       - name: Azure Functions Action
         uses: Azure/functions-action@v1.5.1
         with:
