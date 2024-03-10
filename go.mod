@@ -1,6 +1,6 @@
 module github.com/the-hideout/cache
 
-go 1.21
+go 1.17
 
 require (
 	github.com/gin-gonic/gin v1.9.1

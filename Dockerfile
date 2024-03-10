@@ -1,4 +1,4 @@
-FROM golang:1.21.1-alpine as builder
+FROM golang:1.17.13-alpine as builder
 
 WORKDIR /app
 
@@ -8,7 +8,7 @@ RUN go mod download
 RUN go mod verify
 RUN GOOS=linux GOARCH=amd64 go build -o main
 
-FROM golang:1.21.1-alpine
+FROM golang:1.17.13-alpine
 
 RUN apk add curl
 
