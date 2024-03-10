@@ -27,7 +27,7 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_RBAC_CREDENTIALS }}
 
-      - name: Azure Functions Action
+      - name: deploy
         uses: Azure/functions-action@v1.5.1
         with:
           app-name: tarkov-cache
