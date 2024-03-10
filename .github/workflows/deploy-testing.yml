@@ -27,18 +27,25 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_RBAC_CREDENTIALS }}
 
-      - name: bootstrap azure functions cli
-        run: |
-          cat ci/vendor/Azure.Functions.Cli.linux*part* > ci/vendor/Azure.Functions.Cli.linux-x64.zip
-          unzip -d ci/vendor/azure-functions-cli ci/vendor/Azure.Functions.Cli.linux-x64.zip
-          chmod +x ci/vendor/azure-functions-cli/func
-          chmod +x ci/vendor/azure-functions-cli/gozip
-          echo "./ci/vendor/azure-functions-cli" >> $GITHUB_PATH
+      # - name: bootstrap azure functions cli
+      #   run: |
+      #     cat ci/vendor/Azure.Functions.Cli.linux*part* > ci/vendor/Azure.Functions.Cli.linux-x64.zip
+      #     unzip -d ci/vendor/azure-functions-cli ci/vendor/Azure.Functions.Cli.linux-x64.zip
+      #     chmod +x ci/vendor/azure-functions-cli/func
+      #     chmod +x ci/vendor/azure-functions-cli/gozip
+      #     echo "./ci/vendor/azure-functions-cli" >> $GITHUB_PATH
       
       - name: check build
         run: ls -lh "main"
 
-      - name: deploy
-        run: |
-          func init --worker-runtime custom
-          func azure functionapp publish tarkov-cache --custom
+      # - name: deploy
+      #   run: |
+      #     func init --worker-runtime custom
+      #     func azure functionapp publish tarkov-cache --custom
+
+      - name: Azure Functions Action
+        uses: Azure/functions-action@v1.5.1
+        with:
+          app-name: tarkov-cache
+          package: "."
+  
