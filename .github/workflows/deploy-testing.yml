@@ -33,4 +33,4 @@ jobs:
           chmod +x ci/vendor/gozip
 
       - name: deploy
-        run: ./ci/vendor/func azure functionapp publish tarkov-cache --custom
+        run: ./ci/vendor/azure-functions-cli/func azure functionapp publish tarkov-cache --custom
