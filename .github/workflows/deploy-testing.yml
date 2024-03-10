@@ -1,11 +1,7 @@
 name: deploy-testing
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -29,8 +25,12 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Set up Azure Functions
-        uses: azure/functions-action@v1.5.1
-        with:
-          app-name: tarkov-cache
-          respect-funcignore: true
+      - name: bootstrap azure functions cli
+        run: |
+          cat ci/vendor/Azure.Functions.Cli.linux*part* > ci/vendor/Azure.Functions.Cli.linux-x64.zip
+          unzip -d ci/vendor/azure-functions-cli ci/vendor/Azure.Functions.Cli.linux-x64.zip
+          chmod +x ci/vendor/func
+          chmod +x ci/vendor/gozip
+
+      - name: deploy
+        run: ./ci/vendor/func azure functionapp publish tarkov-cache --custom
