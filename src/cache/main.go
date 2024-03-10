@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -72,6 +73,7 @@ func main() {
 
 	// Health endpoint
 	r.GET("/health", func(c *gin.Context) {
+		log.Println("request - /health - GET")
 		c.String(http.StatusOK, "OK")
 	})
 
@@ -79,6 +81,7 @@ func main() {
 	// If the item is found, the value of the item is returned
 	// If the item is not found, a 404 error is returned
 	r.GET("/api/cache", func(c *gin.Context) {
+		log.Println("request - /api/cache - GET")
 		// Get and validate the key query string parameter
 		key := c.DefaultQuery("key", "")
 		if key == "" {
@@ -106,8 +109,10 @@ func main() {
 			return
 		}
 
-		//Set the X-CACHE-TTL header for when the item expires
-		c.Header("X-CACHE-TTL", fmt.Sprintf("%.0f", item_ttl.Seconds()))
+		// Set the X-CACHE-TTL header for when the item expires
+		var formattedSeconds string = fmt.Sprintf("%.0f", item_ttl.Seconds())
+		c.Header("X-CACHE-TTL", formattedSeconds)
+		log.Println("key: " + key + " - X-CACHE-TTL: " + formattedSeconds)
 
 		// Set a cache-control header to ensure the item is cached
 		c.Header("Cache-Control", fmt.Sprintf("public, max-age=%d", int(item_ttl.Seconds())))
@@ -119,6 +124,7 @@ func main() {
 	// Endpoint to add an item to the in-memory redis cache
 	// If the item is successfully added, return a success message
 	r.POST("/api/cache", func(c *gin.Context) {
+		log.Println("request - /api/cache - POST")
 		var requestBody CacheSetBody
 
 		// Parse and validate the request body
@@ -163,10 +169,12 @@ func main() {
 			return
 		}
 
+		log.Println("cached - key: " + requestBody.Key + " - ttl: " + ttl.String())
 		c.JSON(http.StatusOK, gin.H{"message": "cached"})
 	})
 
 	// Start the application on 0.0.0.0:8080
 	port_info := APIPort()
 	r.Run(port_info)
+	log.Println("cache API is running - " + port_info)
 }
