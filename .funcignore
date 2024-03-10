@@ -1,0 +1,15 @@
+.git*
+.vscode
+local.settings.json
+.github
+docs
+.dockerignore
+.gitignore
+docker-compose.yml
+Dockerfile
+LICENSE
+Makefile
+README.md
+SECURITY.md
+.go-version
+script
