@@ -32,7 +32,7 @@ jobs:
         with:
           ref: ${{ steps.branch-deploy.outputs.ref }}
 
-      - uses: azure/login@8c334a195cbb38e46038007b304988d888bf676a # pin@v1
+      - uses: azure/login@8c334a195cbb38e46038007b304988d888bf676a # pin@v2
         if: ${{ steps.branch-deploy.outputs.continue == 'true' }}
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
