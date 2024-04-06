@@ -39,11 +39,22 @@ echo -e "${GREEN}cache server is up! starting acceptance tests${OFF}\n"
 
 SUCCESS="true"
 
+# a call without the proper auth header should return a 401
+status_code=$(curl --insecure --location --request GET "https://localhost:${HTTP_PORT}/api/health" -o /dev/null -w "%{http_code}" -s)
+
+if [[ $status_code -eq 401 ]]; then
+  echo -e "✅ ${BLUE}/api/health${OFF} without proper auth ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/health${OFF} ${RED}failed${OFF}"
+fi
+
+# a call with the proper auth header should return a 200 to the health endpoint
 response=$(curl --insecure --location --request GET "https://localhost:${HTTP_PORT}/api/health" --header "$DEV_AUTH_HEADER" -w "OK%{http_code}" -s)
 status_code=$(echo "$response" | grep -oP 'OK\K[0-9]+')
 
 if [[ $status_code -eq 200 ]]; then
-  echo -e "✅ ${BLUE}/api/health${OFF} ${GREEN}passed${OFF}"
+  echo -e "✅ ${BLUE}/api/health${OFF} with auth ${GREEN}passed${OFF}"
 else
   SUCCESS="false"
   echo -e "❌ ${BLUE}/api/health${OFF} ${RED}failed${OFF}"
@@ -53,7 +64,7 @@ fi
 status_code=$(curl --insecure --location --request GET "https://localhost:${HTTP_PORT}/api/cache" --header "$DEV_AUTH_HEADER" -o /dev/null -w "%{http_code}" -s)
 
 if [[ $status_code -eq 400 ]]; then
-  echo -e "✅ ${BLUE}/api/cache${OFF} ${GREEN}passed${OFF}"
+  echo -e "✅ ${BLUE}/api/cache${OFF} without a key param ${GREEN}passed${OFF}"
 else
   SUCCESS="false"
   echo -e "❌ ${BLUE}/api/cache${OFF} ${RED}failed${OFF}"
