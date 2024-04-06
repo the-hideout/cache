@@ -1,0 +1,11 @@
+# To build the entire stack run 'make run'
+
+services:
+  redis:
+    volumes:
+      - ./data/redis:/data
+
+  caddy:
+    ports:
+      - 80:80
+      - 443:443

@@ -6,8 +6,6 @@ services:
     image: redis:alpine3.16
     ports:
       - 6379:6379
-    volumes:
-      - ./data/redis:/data
     restart: unless-stopped
     healthcheck:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
@@ -37,9 +35,6 @@ services:
     build:
       context: ./src/caddy
       dockerfile: ./Dockerfile
-    ports:
-      - 80:80
-      - 443:443
     volumes:
       - ./data/caddy_data:/data
       - ./data/caddy_config:/config

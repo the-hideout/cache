@@ -1,0 +1,126 @@
+#!/bin/bash
+
+# COLORS
+OFF='\033[0m'
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
+
+# set the working directory to the root of the project
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
+
+# start the docker compose stack
+make acceptance
+
+DEV_AUTH_HEADER="Authorization: Basic ZGV2OmRldg=="
+ITS_UP="Listening and serving HTTP"
+HTTP_PORT="4443"
+
+# initialize counter
+counter=0
+
+echo -e "${BLUE}waiting for the cache server...${OFF}"
+
+# wait for the server to start by grep-ing the logs for the ITS_UP string
+while ! docker compose logs cache | grep "$ITS_UP"; do
+  sleep 1
+  # increment counter
+  counter=$((counter+1))
+  # if counter is 120, exit the loop
+  if [ $counter -eq 120 ]; then
+    echo "timeout reached - cache server did not start"
+    exit 1
+  fi
+done
+
+echo -e "${GREEN}cache server is up! starting acceptance tests${OFF}\n"
+
+###### acceptance tests ######
+
+SUCCESS="true"
+
+# a call without the proper auth header should return a 401
+status_code=$(curl --insecure --location --request GET "https://localhost:${HTTP_PORT}/api/health" -o /dev/null -w "%{http_code}" -s)
+
+if [[ $status_code -eq 401 ]]; then
+  echo -e "✅ ${BLUE}/api/health${OFF} without proper auth ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/health${OFF} ${RED}failed${OFF}"
+fi
+
+# a call with the proper auth header should return a 200 to the health endpoint
+response=$(curl --insecure --location --request GET "https://localhost:${HTTP_PORT}/api/health" --header "$DEV_AUTH_HEADER" -w "OK%{http_code}" -s)
+status_code=$(echo "$response" | grep -oP 'OK\K[0-9]+')
+
+if [[ $status_code -eq 200 ]]; then
+  echo -e "✅ ${BLUE}/api/health${OFF} with auth ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/health${OFF} ${RED}failed${OFF}"
+fi
+
+# a naked call to /api/cache should return a 400
+status_code=$(curl --insecure --location --request GET "https://localhost:${HTTP_PORT}/api/cache" --header "$DEV_AUTH_HEADER" -o /dev/null -w "%{http_code}" -s)
+
+if [[ $status_code -eq 400 ]]; then
+  echo -e "✅ ${BLUE}/api/cache${OFF} without a key param ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache${OFF} ${RED}failed${OFF}"
+fi
+
+# a call to /api/cache with a key should return a 404 since it hasn't been set yet
+status_code=$(curl --insecure --location --request GET "https://localhost:${HTTP_PORT}/api/cache?key=mycoolquery" --header "$DEV_AUTH_HEADER" -o /dev/null -w "%{http_code}" -s)
+
+if [[ $status_code -eq 404 ]]; then
+  echo -e "✅ ${BLUE}/api/cache?key=mycoolquery${OFF} first GET check ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache?key=mycoolquery${OFF} ${RED}failed${OFF}"
+fi
+
+status_code=$(curl --insecure --location --request POST "https://localhost:${HTTP_PORT}/api/cache" --header "$DEV_AUTH_HEADER" --header 'Content-Type: application/json' --data-raw '{"key": "mycoolquery","value": "fake response"}' -o /dev/null -w "%{http_code}" -s)
+
+if [[ $status_code -eq 200 ]]; then
+  echo -e "✅ ${BLUE}/api/cache${OFF} POST ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache${OFF} ${RED}failed${OFF}"
+fi
+
+# now the ?key=mycoolquery should return a 200, with the "fake response" as the body and a `Cache-Control` header and `X-Cache-Ttl` header should exist
+response=$(curl --insecure --location --request GET "https://localhost:${HTTP_PORT}/api/cache?key=mycoolquery" --header "$DEV_AUTH_HEADER" -w "%{http_code}" -s)
+body=$(echo "$response" | sed -r 's/(.*)[0-9]{3}$/\1/')
+status_code=$(echo "$response" | grep -oP '[0-9]{3}$')
+headers=$(curl -I --insecure --location --request GET "https://localhost:${HTTP_PORT}/api/cache?key=mycoolquery" --header "$DEV_AUTH_HEADER" -s)
+
+# this header should exist
+echo "$headers" | grep -iq "Cache-Control"
+cache_control_exists=$?
+
+# this header should exist
+echo "$headers" | grep -iq "X-Cache-Ttl"
+x_cache_ttl_exists=$?
+
+# check for a header that should not exist
+echo "$headers" | grep -iq "should-not-exist"
+should_not_exist=$?
+
+if [[ $status_code -eq 200 && $body == "\"fake response\"" && $x_cache_ttl_exists -eq 0 && $cache_control_exists -eq 0 && $should_not_exist -eq 1 ]]; then
+  echo -e "✅ ${BLUE}/api/cache?key=mycoolquery${OFF} second GET check ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache?key=mycoolquery${OFF} ${RED}failed${OFF}"
+fi
+
+###### acceptance tests results ######
+echo -e "\n${PURPLE}acceptance tests results:${OFF}"
+if [[ $SUCCESS == "true" ]]; then
+  echo -e "✅ ${GREEN}all acceptance tests passed${OFF}"
+  exit 0
+else
+  echo -e "${RED}acceptance tests failed${OFF}"
+  exit 1
+fi

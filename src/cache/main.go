@@ -67,6 +67,11 @@ func main() {
 		c.String(http.StatusOK, "OK")
 	})
 
+	// API Health endpoint
+	r.GET("/api/health", func(c *gin.Context) {
+		c.String(http.StatusOK, "OK")
+	})
+
 	// Endpoint to fetch an item from the in-memory redis cache
 	// If the item is found, the value of the item is returned
 	// If the item is not found, a 404 error is returned
