@@ -70,7 +70,7 @@ else
 fi
 
 ###### acceptance tests results ######
-echo -e "\n${PURPLE}acceptance tests results:${OFF}"
+echo -e "\n\n${PURPLE}acceptance tests results:${OFF}"
 if [[ $SUCCESS == "true" ]]; then
   echo -e "✅ ${GREEN}all acceptance tests passed${OFF}"
   exit 0
