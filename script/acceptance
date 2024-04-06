@@ -49,8 +49,28 @@ else
   echo -e "❌ ${BLUE}/api/health${OFF} ${RED}failed${OFF}"
 fi
 
-###### acceptance tests results ######
+# a naked call to /api/cache should return a 400
+status_code=$(curl --insecure --location --request GET "https://localhost:${HTTP_PORT}/api/cache" --header "$DEV_AUTH_HEADER" -o /dev/null -w "%{http_code}" -s)
 
+if [[ $status_code -eq 400 ]]; then
+  echo -e "✅ ${BLUE}/api/cache${OFF} ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache${OFF} ${RED}failed${OFF}"
+fi
+
+# a call to /api/cache with a key should return a 404 since it hasn't been set yet
+status_code=$(curl --insecure --location --request GET "https://localhost:${HTTP_PORT}/api/cache?key=mycoolquery" --header "$DEV_AUTH_HEADER" -o /dev/null -w "%{http_code}" -s)
+
+if [[ $status_code -eq 404 ]]; then
+  echo -e "✅ ${BLUE}/api/cache?key=mycoolquery${OFF} first GET check ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache?key=mycoolquery${OFF} ${RED}failed${OFF}"
+fi
+
+###### acceptance tests results ######
+echo -e "\n${PURPLE}acceptance tests results:${OFF}"
 if [[ $SUCCESS == "true" ]]; then
   echo -e "✅ ${GREEN}all acceptance tests passed${OFF}"
   exit 0
