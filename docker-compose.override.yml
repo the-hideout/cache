@@ -1,0 +1,7 @@
+# To build the entire stack run 'make run'
+
+services:
+  caddy:
+    ports:
+      - 80:80
+      - 443:443

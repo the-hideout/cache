@@ -14,7 +14,7 @@ make run
 
 DEV_AUTH_HEADER="Authorization: Basic ZGV2OmRldg=="
 ITS_UP="Listening and serving HTTP"
-HTTP_PORT="443"
+HTTP_PORT="4443"
 
 # initialize counter
 counter=0
