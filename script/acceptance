@@ -7,8 +7,6 @@ GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 PURPLE='\033[0;35m'
 
-set -e # Prevent any kind of script failures
-
 # set the working directory to the root of the project
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
 
@@ -90,6 +88,31 @@ if [[ $status_code -eq 200 ]]; then
 else
   SUCCESS="false"
   echo -e "❌ ${BLUE}/api/cache${OFF} ${RED}failed${OFF}"
+fi
+
+# now the ?key=mycoolquery should return a 200, with the "fake response" as the body and a `Cache-Control` header and `X-Cache-Ttl` header should exist
+response=$(curl --insecure --location --request GET "https://localhost:${HTTP_PORT}/api/cache?key=mycoolquery" --header "$DEV_AUTH_HEADER" -w "%{http_code}" -s)
+body=$(echo "$response" | sed -r 's/(.*)[0-9]{3}$/\1/')
+status_code=$(echo "$response" | grep -oP '[0-9]{3}$')
+headers=$(curl -I --insecure --location --request GET "https://localhost:${HTTP_PORT}/api/cache?key=mycoolquery" --header "$DEV_AUTH_HEADER" -s)
+
+# this header should exist
+echo "$headers" | grep -iq "Cache-Control"
+cache_control_exists=$?
+
+# this header should exist
+echo "$headers" | grep -iq "X-Cache-Ttl"
+x_cache_ttl_exists=$?
+
+# check for a header that should not exist
+echo "$headers" | grep -iq "should-not-exist"
+should_not_exist=$?
+
+if [[ $status_code -eq 200 && $body == "\"fake response\"" && $x_cache_ttl_exists -eq 0 && $cache_control_exists -eq 0 && $should_not_exist -eq 1 ]]; then
+  echo -e "✅ ${BLUE}/api/cache?key=mycoolquery${OFF} second GET check ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache?key=mycoolquery${OFF} ${RED}failed${OFF}"
 fi
 
 ###### acceptance tests results ######
