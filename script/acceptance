@@ -9,6 +9,9 @@ PURPLE='\033[0;35m'
 
 set -e # Prevent any kind of script failures
 
+# set the working directory to the root of the project
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
+
 # start the docker compose stack
 make acceptance
 
@@ -78,6 +81,15 @@ if [[ $status_code -eq 404 ]]; then
 else
   SUCCESS="false"
   echo -e "❌ ${BLUE}/api/cache?key=mycoolquery${OFF} ${RED}failed${OFF}"
+fi
+
+status_code=$(curl --insecure --location --request POST "https://localhost:${HTTP_PORT}/api/cache" --header "$DEV_AUTH_HEADER" --header 'Content-Type: application/json' --data-raw '{"key": "mycoolquery","value": "fake response"}' -o /dev/null -w "%{http_code}" -s)
+
+if [[ $status_code -eq 200 ]]; then
+  echo -e "✅ ${BLUE}/api/cache${OFF} POST ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache${OFF} ${RED}failed${OFF}"
 fi
 
 ###### acceptance tests results ######
