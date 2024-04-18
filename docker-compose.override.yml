@@ -3,4 +3,4 @@
 services:
   cache:
     environment:
-      GIN_MODE: development
+      GIN_MODE: debug
