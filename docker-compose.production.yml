@@ -3,4 +3,8 @@
 services:
   cache:
     environment:
-      GIN_MODE: development
+      GIN_MODE: release
+
+  redis:
+    volumes:
+      - ./data/redis:/data

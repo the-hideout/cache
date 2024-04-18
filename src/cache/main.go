@@ -163,6 +163,6 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"message": "cached"})
 	})
 
-	// Start the application on 0.0.0.0:8000
-	r.Run(":8000")
+	// Start the application on 0.0.0.0:8080
+	r.Run(":8080")
 }
