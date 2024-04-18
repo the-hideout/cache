@@ -63,9 +63,9 @@ else
 fi
 
 echo "[-] Killing old docker processes"
-sudo -E bash -c 'source ~/.profile && docker-compose -f docker-compose.yml -f docker-compose.production.yml down --remove-orphans -v -t 1'
+docker compose -f docker-compose.yml -f docker-compose.production.yml down --remove-orphans -v -t 1
 
 echo "[i] Building docker containers"
-sudo -E bash -c 'source ~/.profile && docker-compose -f docker-compose.yml -f docker-compose.production.yml up --build -d'
+docker compose -f docker-compose.yml -f docker-compose.production.yml up --build -d
 
 echo "[+] Containers are now running!"
