@@ -13,9 +13,8 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
 # start the docker compose stack
 make acceptance
 
-DEV_AUTH_HEADER="Authorization: Basic ZGV2OmRldg=="
 ITS_UP="Listening and serving HTTP"
-HTTP_PORT="4443"
+HTTP_PORT="8080"
 
 # initialize counter
 counter=0
@@ -40,29 +39,19 @@ echo -e "${GREEN}cache server is up! starting acceptance tests${OFF}\n"
 
 SUCCESS="true"
 
-# a call without the proper auth header should return a 401
-status_code=$(curl --insecure --location --request GET "https://localhost:${HTTP_PORT}/api/health" -o /dev/null -w "%{http_code}" -s)
-
-if [[ $status_code -eq 401 ]]; then
-  echo -e "✅ ${BLUE}/api/health${OFF} without proper auth ${GREEN}passed${OFF}"
-else
-  SUCCESS="false"
-  echo -e "❌ ${BLUE}/api/health${OFF} ${RED}failed${OFF}"
-fi
-
-# a call with the proper auth header should return a 200 to the health endpoint
-response=$(curl --insecure --location --request GET "https://localhost:${HTTP_PORT}/api/health" --header "$DEV_AUTH_HEADER" -w "OK%{http_code}" -s)
+# should return a 200 to the health endpoint
+response=$(curl --insecure --location --request GET "http://localhost:${HTTP_PORT}/api/health" -w "OK%{http_code}" -s)
 status_code=$(echo "$response" | grep -oP 'OK\K[0-9]+')
 
 if [[ $status_code -eq 200 ]]; then
-  echo -e "✅ ${BLUE}/api/health${OFF} with auth ${GREEN}passed${OFF}"
+  echo -e "✅ ${BLUE}/api/health${OFF} ${GREEN}passed${OFF}"
 else
   SUCCESS="false"
   echo -e "❌ ${BLUE}/api/health${OFF} ${RED}failed${OFF}"
 fi
 
 # a naked call to /api/cache should return a 400
-status_code=$(curl --insecure --location --request GET "https://localhost:${HTTP_PORT}/api/cache" --header "$DEV_AUTH_HEADER" -o /dev/null -w "%{http_code}" -s)
+status_code=$(curl --insecure --location --request GET "http://localhost:${HTTP_PORT}/api/cache" -o /dev/null -w "%{http_code}" -s)
 
 if [[ $status_code -eq 400 ]]; then
   echo -e "✅ ${BLUE}/api/cache${OFF} without a key param ${GREEN}passed${OFF}"
@@ -72,7 +61,7 @@ else
 fi
 
 # a call to /api/cache with a key should return a 404 since it hasn't been set yet
-status_code=$(curl --insecure --location --request GET "https://localhost:${HTTP_PORT}/api/cache?key=mycoolquery" --header "$DEV_AUTH_HEADER" -o /dev/null -w "%{http_code}" -s)
+status_code=$(curl --insecure --location --request GET "http://localhost:${HTTP_PORT}/api/cache?key=mycoolquery" -o /dev/null -w "%{http_code}" -s)
 
 if [[ $status_code -eq 404 ]]; then
   echo -e "✅ ${BLUE}/api/cache?key=mycoolquery${OFF} first GET check ${GREEN}passed${OFF}"
@@ -81,7 +70,7 @@ else
   echo -e "❌ ${BLUE}/api/cache?key=mycoolquery${OFF} ${RED}failed${OFF}"
 fi
 
-status_code=$(curl --insecure --location --request POST "https://localhost:${HTTP_PORT}/api/cache" --header "$DEV_AUTH_HEADER" --header 'Content-Type: application/json' --data-raw '{"key": "mycoolquery","value": "fake response"}' -o /dev/null -w "%{http_code}" -s)
+status_code=$(curl --insecure --location --request POST "http://localhost:${HTTP_PORT}/api/cache" --header 'Content-Type: application/json' --data-raw '{"key": "mycoolquery","value": "fake response"}' -o /dev/null -w "%{http_code}" -s)
 
 if [[ $status_code -eq 200 ]]; then
   echo -e "✅ ${BLUE}/api/cache${OFF} POST ${GREEN}passed${OFF}"
@@ -91,10 +80,10 @@ else
 fi
 
 # now the ?key=mycoolquery should return a 200, with the "fake response" as the body and a `Cache-Control` header and `X-Cache-Ttl` header should exist
-response=$(curl --insecure --location --request GET "https://localhost:${HTTP_PORT}/api/cache?key=mycoolquery" --header "$DEV_AUTH_HEADER" -w "%{http_code}" -s)
+response=$(curl --insecure --location --request GET "http://localhost:${HTTP_PORT}/api/cache?key=mycoolquery" -w "%{http_code}" -s)
 body=$(echo "$response" | sed -r 's/(.*)[0-9]{3}$/\1/')
 status_code=$(echo "$response" | grep -oP '[0-9]{3}$')
-headers=$(curl -I --insecure --location --request GET "https://localhost:${HTTP_PORT}/api/cache?key=mycoolquery" --header "$DEV_AUTH_HEADER" -s)
+headers=$(curl -I --insecure --location --request GET "http://localhost:${HTTP_PORT}/api/cache?key=mycoolquery" -s)
 
 # this header should exist
 echo "$headers" | grep -iq "Cache-Control"
