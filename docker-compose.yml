@@ -26,6 +26,8 @@ services:
       start_period: 15s
     depends_on:
       - redis
+    networks:
+      - ingress
 
 networks:
   ingress:
