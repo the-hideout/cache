@@ -9,8 +9,6 @@ services:
     restart: unless-stopped
     healthcheck:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
-    networks:
-      - cache
 
   cache:
     container_name: cache
@@ -28,13 +26,3 @@ services:
       start_period: 15s
     depends_on:
       - redis
-    networks:
-      - ingress
-      - cache
-
-networks:
-  ingress:
-    name: ingress
-    external: true
-  cache:
-    name: cache

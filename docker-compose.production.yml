@@ -4,7 +4,19 @@ services:
   cache:
     environment:
       GIN_MODE: release
+    networks:
+      - cache
+      - ingress
 
   redis:
     volumes:
       - ./data/redis:/data
+    networks:
+      - cache
+
+networks:
+  ingress:
+    name: ingress
+    external: true
+  cache:
+    name: cache
