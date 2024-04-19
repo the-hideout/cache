@@ -71,19 +71,11 @@ post "/api/cache" do |env|
     halt env, status_code: 400, response: "key and value params are required in payload body"
   end
 
-  # Create the ttl variable to store the TTL of the item
-  ttl = if ttl.nil?
-          # If the TTL was not provided, use the default TTL from the config file
-          # Fetch TTL from config file and convert it into a time.Duration in seconds
-          config["ttl"].as_i.seconds
-        else
-          # If the TTL was provided, use it
-          # Convert the string representation of the TTL into an integer
-          ttl.to_i.seconds
-        end
+  # If ttl is nil, an empty string, or zero, then use the default ttl
+  ttl = (ttl.nil? || ttl.to_s.empty? || ttl.to_i == 0) ? config["ttl"].as_i : ttl.to_i
 
   # Add the item to the cache
-  redis.set(key, value, ex: ttl.to_i)
+  redis.set(key, value, ex: ttl)
 
   {message: "cached"}.to_json
 end
