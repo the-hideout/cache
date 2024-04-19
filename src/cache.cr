@@ -1,6 +1,11 @@
 require "kemal"
 require "json"
 require "redis"
+require "log"
+
+Log.setup_from_env(default_level: :info)
+
+Log.info { "Starting the application" }
 
 def config
   # Read config file
@@ -75,7 +80,12 @@ post "/api/cache" do |env|
   ttl = (ttl.nil? || ttl.to_s.empty? || ttl.to_i == 0) ? config["ttl"].as_i : ttl.to_i
 
   # Add the item to the cache
-  redis.set(key, value, ex: ttl)
+  begin
+    redis.set(key, value, ex: ttl)
+  rescue e : Redis::Error
+    Log.error { "Failed to cache item: #{e.message} - #{e.backtrace}" }
+    halt env, status_code: 500, response: "failed to cache item"
+  end
 
   {message: "cached"}.to_json
 end
