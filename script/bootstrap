@@ -5,6 +5,9 @@ set -e
 # set the working directory to the root of the project
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
 
+mkdir -p "$DIR/vendor/cache"
+mkdir -p "$DIR/bin"
+
 SHARDS_INSTALL_PATH="$DIR/vendor/cache" SHARDS_CACHE_PATH="$DIR/vendor/cache/shards" shards install --frozen $@
 
 cd "$DIR/vendor/cache/ameba" && shards build && cp bin/ameba "$DIR/bin/ameba" && cd "$DIR"

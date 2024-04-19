@@ -2,6 +2,9 @@
 
 # runs all formatting scripts and tests at once
 
+# set the working directory to the root of the project
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
+
 set -e
 
 script/format

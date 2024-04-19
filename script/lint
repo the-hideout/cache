@@ -2,8 +2,11 @@
 
 set -e
 
+# set the working directory to the root of the project
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
+
 echo "🖌️  linting Crystal files..."
 
-./bin/ameba $@
+"$DIR/bin/ameba" $@
 
 echo "✅ linting complete!"
