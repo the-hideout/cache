@@ -1,14 +1,14 @@
-name: crystal-base-template
-version: 0.1.0
+name: cache
+version: 0.18.0
 
 authors:
   - GrantBirki
 
 targets:
-  crystal-base-template:
-    main: src/crystal-base-template.cr
+  cache:
+    main: src/cache.cr
 
-crystal: '>= 1.11.0'
+crystal: ">= 1.12.1"
 
 license: MIT
 

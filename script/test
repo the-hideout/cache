@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -e
+
+echo "🧪 running unit tests..."
+
+crystal spec
+
+echo "✅ tests complete!"
