@@ -44,6 +44,9 @@ get "/api/cache" do |env|
   # Check the cache for the key
   val = redis.get(key)
 
+  # only convert the value to a string if it is not nil
+  val = val.to_s unless val.nil?
+
   # If the item is not found, return a 404 error
   if val.nil?
     halt env, status_code: 404, response: "key not found"
@@ -76,8 +79,8 @@ post "/api/cache" do |env|
     halt env, status_code: 400, response: "key and value params are required in payload body"
   end
 
-  # If ttl is nil, an empty string, or zero, then use the default ttl
-  ttl = (ttl.nil? || ttl.to_s.empty? || ttl.to_i == 0) ? config["ttl"].as_i : ttl.to_i
+  # If ttl is nil, an empty string, or not a number, then use the default ttl
+  ttl = (ttl.nil? || ttl.empty? || ttl.to_i.to_s != ttl) ? config["ttl"].as_i : ttl.to_i
 
   # Add the item to the cache
   begin
