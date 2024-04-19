@@ -82,8 +82,6 @@ post "/api/cache" do |env|
           ttl.to_i.seconds
         end
 
-  puts "ttl: #{ttl}"
-
   # Add the item to the cache
   redis.set(key, value, ex: ttl.to_i)
 
