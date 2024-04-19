@@ -1,7 +1,9 @@
-module Cache
-  VERSION = "0.1.0"
+require "kemal"
 
-  def self.add(a, b)
-    a + b
-  end
+# Define your routes
+get "/" do
+  "Hello World!"
 end
+
+# Run Kemal on port 8080
+Kemal.run(8080)
