@@ -5,6 +5,8 @@ set -e
 # set the working directory to the root of the project
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
 
+mkdir -p "$DIR/.cache/shards"
+
 echo "🔨 building in release mode"
-SHARDS_INSTALL_PATH="$DIR/vendor/cache" SHARDS_CACHE_PATH="$DIR/vendor/cache/shards" shards build --release --progress
+SHARDS_CACHE_PATH="$DIR/.cache/shards" shards build --release --progress
 echo "📦 build complete"

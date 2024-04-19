@@ -8,6 +8,6 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
 mkdir -p "$DIR/vendor/cache"
 mkdir -p "$DIR/bin"
 
-SHARDS_INSTALL_PATH="$DIR/vendor/cache" SHARDS_CACHE_PATH="$DIR/vendor/cache/shards" shards update $@
+SHARDS_CACHE_PATH="$DIR/.cache/shards" shards update $@
 
-cd "$DIR/vendor/cache/ameba" && shards build && cp bin/ameba "$DIR/bin/ameba" && cd "$DIR"
+cd "$DIR/lib/ameba" && shards build && cp bin/ameba "$DIR/bin/ameba" && cd "$DIR"

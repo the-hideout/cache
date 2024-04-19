@@ -2,7 +2,7 @@ __pycache__
 creds.env
 *.pem
 
-vendor/cache/shards/*
+.cache/shards/*
 
 # container volume files
 data/*
@@ -13,7 +13,6 @@ terraform.auto.tfvars.json
 terraform/.terraform/providers
 **/.terraform/*
 
-/docs/
 /bin/
 /.shards/
 *.dwarf
