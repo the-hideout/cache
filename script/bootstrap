@@ -5,9 +5,4 @@ set -e
 # set the working directory to the root of the project
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
 
-# export SHARDS_CACHE_PATH="$DIR/vendor/cache/shards"
-
-# echo "Installing shards from vendored cache"
-# echo "SHARDS_CACHE_PATH: $SHARDS_CACHE_PATH"
-
-shards install #--local
+SHARDS_INSTALL_PATH="$DIR/vendor/cache" SHARDS_CACHE_PATH="$DIR/vendor/cache/shards" shards install --frozen $@
