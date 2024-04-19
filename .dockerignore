@@ -7,3 +7,6 @@ LICENSE
 Makefile
 README.md
 SECURITY.md
+docker-compose.yml
+docker-compose.override.yml
+docker-compose.production.yml

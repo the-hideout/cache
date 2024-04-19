@@ -53,8 +53,8 @@ get "/api/cache" do |env|
   # Set a cache-control header to ensure the item is cached
   env.response.headers["Cache-Control"] = "public, max-age=#{item_ttl}"
 
-  # Return the value of the item from the cache
-  val
+  # Return the value of the item from the cache in JSON format
+  val.to_json
 end
 
 # Endpoint to add an item to the in-memory redis cache

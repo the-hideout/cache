@@ -4,7 +4,7 @@ WORKDIR /app
 
 RUN apk add bash
 
-COPY script/ script/
+COPY script/bootstrap script/bootstrap
 COPY lib/ lib/
 COPY shard.lock shard.lock
 COPY shard.yml shard.yml
