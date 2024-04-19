@@ -10,3 +10,9 @@ data/*
 terraform.auto.tfvars.json
 terraform/.terraform/providers
 **/.terraform/*
+
+/docs/
+/bin/
+/.shards/
+*.dwarf
+dist/

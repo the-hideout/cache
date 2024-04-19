@@ -1,0 +1,17 @@
+name: crystal-base-template
+version: 0.1.0
+
+authors:
+  - GrantBirki
+
+targets:
+  crystal-base-template:
+    main: src/crystal-base-template.cr
+
+crystal: '>= 1.11.0'
+
+license: MIT
+
+development_dependencies:
+  ameba:
+    github: crystal-ameba/ameba

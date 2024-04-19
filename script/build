@@ -1,0 +1,10 @@
+#!/bin/bash
+
+set -e
+
+CRYSTAL_FILE=crystal-base-template
+mkdir -p dist/
+
+echo "Building $CRYSTAL_FILE in release mode"
+crystal build "src/$CRYSTAL_FILE.cr" -o "dist/$CRYSTAL_FILE" --release
+echo "📦 Done building $CRYSTAL_FILE"
