@@ -61,12 +61,11 @@ end
 # If the item is successfully added, return a success message
 post "/api/cache" do |env|
   # Parse the request body
-  parsed_body = JSON.parse(env.request.body.to_s)
+  key = env.params.json["key"].as(String)
+  value = env.params.json["value"].as(String)
 
-  # Extract the values
-  key = parsed_body["key"].as_s
-  value = parsed_body["value"].as_s
-  ttl = parsed_body["ttl"].as_s
+  # check to see if the ttl is provided in the request body, if not the default ttl will be used later on
+  ttl = env.params.json["ttl"]?.try(&.as(String))
 
   if key.empty? || value.empty?
     halt env, status_code: 400, response: "key and value params are required in payload body"
@@ -83,8 +82,10 @@ post "/api/cache" do |env|
           ttl.to_i.seconds
         end
 
+  puts "ttl: #{ttl}"
+
   # Add the item to the cache
-  redis.set(key, value, ex: ttl)
+  redis.set(key, value, ex: ttl.to_i)
 
   {message: "cached"}.to_json
 end

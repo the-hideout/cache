@@ -1,0 +1,9 @@
+docs/
+.cache/
+.github/
+bin/
+data/
+LICENSE
+Makefile
+README.md
+SECURITY.md

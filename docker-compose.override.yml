@@ -2,8 +2,6 @@
 
 services:
   cache:
-    environment:
-      GIN_MODE: debug
     networks:
       - cache
   
