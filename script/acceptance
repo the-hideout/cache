@@ -79,6 +79,8 @@ else
   echo -e "❌ ${BLUE}/api/cache${OFF} ${RED}failed${OFF}"
 fi
 
+sleep 2
+
 # now the ?key=mycoolquery should return a 200, with the "fake response" as the body and a `Cache-Control` header and `X-Cache-Ttl` header should exist
 response=$(curl --insecure --location --request GET "http://localhost:${HTTP_PORT}/api/cache?key=mycoolquery" -w "%{http_code}" -s)
 body=$(echo "$response" | sed -r 's/(.*)[0-9]{3}$/\1/')
@@ -101,7 +103,7 @@ if [[ $status_code -eq 200 && $body == "\"fake response\"" && $x_cache_ttl_exist
   echo -e "✅ ${BLUE}/api/cache?key=mycoolquery${OFF} second GET check ${GREEN}passed${OFF}"
 else
   SUCCESS="false"
-  echo -e "❌ ${BLUE}/api/cache?key=mycoolquery${OFF} ${RED}failed${OFF}"
+  echo -e "❌ ${BLUE}/api/cache?key=mycoolquery${OFF} second GET check ${RED}failed${OFF}"
 fi
 
 ###### acceptance tests results ######
