@@ -5,10 +5,5 @@ set -e
 # set the working directory to the root of the project
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
 
-script/preinstall
-
-shards install --frozen $@
-
-script/postinstall
-
+# ensure the ameba binary is built and available in the bin directory
 cd "$DIR/lib/ameba" && shards build && cp bin/ameba "$DIR/bin/ameba" && cd "$DIR"
