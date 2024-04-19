@@ -17,3 +17,5 @@ terraform/.terraform/providers
 /.shards/
 *.dwarf
 dist/
+
+tmp/
