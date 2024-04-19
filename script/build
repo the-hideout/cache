@@ -2,10 +2,6 @@
 
 set -e
 
-CRYSTAL_FILE=cache
-
-mkdir -p dist/
-
-echo "Building $CRYSTAL_FILE in release mode"
-crystal build "src/$CRYSTAL_FILE.cr" -o "dist/$CRYSTAL_FILE" --release --progress
-echo "📦 Done building $CRYSTAL_FILE"
+echo "🔨 building in release mode"
+shards build --release --progress
+echo "📦 build complete"
