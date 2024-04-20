@@ -2,9 +2,6 @@ FROM crystallang/crystal:1.12.1 as builder
 
 WORKDIR /app
 
-# add bash as alpine doesn't have it by default
-RUN apk add bash
-
 # copy core scripts
 COPY script/preinstall script/preinstall
 COPY script/bootstrap script/bootstrap
@@ -29,7 +26,7 @@ RUN script/build
 FROM crystallang/crystal:1.12.1
 
 # add curl for healthchecks
-RUN apk add curl
+RUN apt-get update && apt-get install -y curl
 
 # create a non-root user for security
 RUN adduser -D nonroot
