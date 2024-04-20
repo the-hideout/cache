@@ -102,6 +102,8 @@ post "/api/cache" do |env|
       halt env, status_code: 400, response: "payload too large to cache"
     end
 
+    Log.debug { "failed item: #{key} (type: #{key.class}) - #{value} (type: #{value.class}) - #{ttl} (type: #{ttl.class})" }
+
     Log.error { "Failed to cache item in redis: #{e.message} - #{e.backtrace}" }
     halt env, status_code: 500, response: "failed to cache item"
   end
