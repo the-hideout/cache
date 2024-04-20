@@ -73,14 +73,25 @@ post "/api/cache" do |env|
   value = env.params.json["value"].as(String)
 
   # check to see if the ttl is provided in the request body, if not the default ttl will be used later on
-  ttl = env.params.json["ttl"]?.try(&.as(String))
+  begin
+    # first try to cast the ttl to a string
+    ttl = env.params.json["ttl"]?.try(&.as(String))
+    ttl = nil if !ttl.nil? && ttl.empty?
+  rescue e : TypeCastError
+    # if that fails, assume the ttl is a whole number
+    ttl = env.params.json["ttl"]
+    puts "the ttl is #{ttl}"
+  end
 
   if key.empty? || value.empty?
     halt env, status_code: 400, response: "key and value params are required in payload body"
   end
 
-  # If ttl is nil, an empty string, or not a number, then use the default ttl
-  ttl = (ttl.nil? || ttl.empty? || ttl.to_i.to_s != ttl) ? config["ttl"].as_i : ttl.to_i
+  # if the ttl is nil, use the default ttl
+  ttl = config["ttl"].as_i if ttl.nil?
+
+  # if the ttl happens to be a string, convert it to an integer now
+  ttl = ttl.to_i if ttl.is_a?(String)
 
   # Add the item to the cache
   begin
