@@ -27,8 +27,6 @@ jobs:
         with:
           crystal: ${{ steps.crystal-version.outputs.crystal }}
 
-      - run: ls -lah
-
       - name: bootstrap
         run: script/bootstrap
 
