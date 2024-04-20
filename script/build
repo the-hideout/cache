@@ -6,5 +6,5 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
 
 echo "🔨 building in release mode"
-SHARDS_CACHE_PATH="$DIR/.cache/shards" shards build --release --progress
+SHARDS_CACHE_PATH="$DIR/.cache/shards" shards build --release --progress --debug
 echo "📦 build complete"
