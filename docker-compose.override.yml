@@ -3,6 +3,7 @@
 services:
   cache:
     environment:
+      LOG_LEVEL: DEBUG
       KEMAL_ENV: development
       CRYSTAL_ENV: development
     networks:
