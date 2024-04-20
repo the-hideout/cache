@@ -40,7 +40,7 @@ WORKDIR /app
 ######### CUSTOM SECTION PER PROJECT #########
 
 # copy the binary from the builder stage
-COPY --from=builder /app/bin/cache .
+COPY --from=builder --chown=nonroot:nonroot /app/bin/cache .
 
 # copy the config file which the binary will use
 COPY --chown=nonroot:nonroot config/config.json /app/config/config.json

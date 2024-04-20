@@ -4,6 +4,7 @@ services:
   cache:
     environment:
       KEMAL_ENV: development
+      CRYSTAL_ENV: development
     networks:
       - cache
   
