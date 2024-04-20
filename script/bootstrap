@@ -10,5 +10,3 @@ script/preinstall
 shards install --frozen $@
 
 script/postinstall
-
-cd "$DIR/lib/ameba" && shards build && cp bin/ameba "$DIR/bin/ameba" && cd "$DIR"
