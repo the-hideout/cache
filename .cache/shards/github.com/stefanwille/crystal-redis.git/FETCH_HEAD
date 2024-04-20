@@ -1,0 +1,123 @@
+0ceb2763a4c36cda174f4634e6f09f3314565108	not-for-merge	branch 'fix-issue-100' of github.com:stefanwille/crystal-redis
+aef53c50568d993a365e5a11927dbb6e7856fcc4	not-for-merge	branch 'fix_128' of github.com:stefanwille/crystal-redis
+749a2af2da3cff2e2a42a1d804ed7a34c219d83a	not-for-merge	branch 'gh-pages' of github.com:stefanwille/crystal-redis
+5fc089cc4f73f08eb42170cb82e30205369a18ad	not-for-merge	branch 'master' of github.com:stefanwille/crystal-redis
+3bb82dc39fdc1f8076ac2e80d55405838fe41476	not-for-merge	branch 'refactor_specs' of github.com:stefanwille/crystal-redis
+13d7d7d51eb54f87371586e227d3d979ca5190bf	not-for-merge	branch 'try_geosearch' of github.com:stefanwille/crystal-redis
+cdea5b5ad6e71e6cdbf83d26814ec0cac5e5dc4c	not-for-merge	branch 'zadd_options' of github.com:stefanwille/crystal-redis
+fa04a1212935a5dae5f166f87348c8f6ea3a3358	not-for-merge	'refs/pull/1/head' of github.com:stefanwille/crystal-redis
+0ceb2763a4c36cda174f4634e6f09f3314565108	not-for-merge	'refs/pull/101/head' of github.com:stefanwille/crystal-redis
+a5675eea6af98fdf7cc13d54e9c4151398976819	not-for-merge	'refs/pull/102/head' of github.com:stefanwille/crystal-redis
+c46eb9fec07000332ff4ade598edc3fa4b06561e	not-for-merge	'refs/pull/103/head' of github.com:stefanwille/crystal-redis
+c6ee008aafa17d8ea08059e6cba2996bd62b562d	not-for-merge	'refs/pull/105/head' of github.com:stefanwille/crystal-redis
+b29109eb8af2c27e0fc776c00307c2d402305b20	not-for-merge	'refs/pull/107/head' of github.com:stefanwille/crystal-redis
+edd645785cdf56525c1cc76328cfedb38a8191f3	not-for-merge	'refs/pull/108/head' of github.com:stefanwille/crystal-redis
+66b20a897a86cbd5dc9b3ed3372eee97c93657fb	not-for-merge	'refs/pull/11/head' of github.com:stefanwille/crystal-redis
+22c24afe811f7fa119cf59e223c8e8dea832dd5f	not-for-merge	'refs/pull/110/head' of github.com:stefanwille/crystal-redis
+73ead2ef037be6fd471c4c0b45da12d691920abc	not-for-merge	'refs/pull/110/merge' of github.com:stefanwille/crystal-redis
+8f2dcd3cf156a78539bfbc651339ce0a43f39b87	not-for-merge	'refs/pull/112/head' of github.com:stefanwille/crystal-redis
+f2ef6125c2e7e814af6e74957b945b5ec93d13cc	not-for-merge	'refs/pull/113/head' of github.com:stefanwille/crystal-redis
+6ac8e0921a063015aa2dce826ffb42ca875c8107	not-for-merge	'refs/pull/115/head' of github.com:stefanwille/crystal-redis
+3bb82dc39fdc1f8076ac2e80d55405838fe41476	not-for-merge	'refs/pull/116/head' of github.com:stefanwille/crystal-redis
+cdea5b5ad6e71e6cdbf83d26814ec0cac5e5dc4c	not-for-merge	'refs/pull/117/head' of github.com:stefanwille/crystal-redis
+aecc70b4d0787c9bfe49d8293e6bd8e5abb95d53	not-for-merge	'refs/pull/118/head' of github.com:stefanwille/crystal-redis
+f6c1abe12aa5e9f6975829321c5668d6076e232a	not-for-merge	'refs/pull/12/head' of github.com:stefanwille/crystal-redis
+fb29b03f0a9695ce21d97ba10ab8949293bb53ff	not-for-merge	'refs/pull/120/head' of github.com:stefanwille/crystal-redis
+40761b21957beee1cd026d1a960aa36cb639aa67	not-for-merge	'refs/pull/122/head' of github.com:stefanwille/crystal-redis
+f19c70eaa3e75dcd57efe3d606c620ad5472f474	not-for-merge	'refs/pull/125/head' of github.com:stefanwille/crystal-redis
+aef53c50568d993a365e5a11927dbb6e7856fcc4	not-for-merge	'refs/pull/131/head' of github.com:stefanwille/crystal-redis
+9b480d1e14aa4d337b5ce23be5d709c8a6d0639f	not-for-merge	'refs/pull/132/head' of github.com:stefanwille/crystal-redis
+7e4e09b592aab7ac81a0c7cd3b7b901c110d1315	not-for-merge	'refs/pull/133/head' of github.com:stefanwille/crystal-redis
+fc9ca0381061dca232ea61552a5b486437bfac2d	not-for-merge	'refs/pull/15/head' of github.com:stefanwille/crystal-redis
+395d95c520308ed256df58edd511057be8258a09	not-for-merge	'refs/pull/18/head' of github.com:stefanwille/crystal-redis
+e8875199340e93b6c8b5264c8da669e61be437e2	not-for-merge	'refs/pull/19/head' of github.com:stefanwille/crystal-redis
+744bac8ec708e996ab020b79cbebdb17e28f6e23	not-for-merge	'refs/pull/20/head' of github.com:stefanwille/crystal-redis
+e5e28889101b955925935933de25f229cdf160fa	not-for-merge	'refs/pull/22/head' of github.com:stefanwille/crystal-redis
+def663c3ac34ebb69f28d15b9d8e2b212ce3b46a	not-for-merge	'refs/pull/23/head' of github.com:stefanwille/crystal-redis
+21faa5e52342737016e44b5bafff9febdee247f3	not-for-merge	'refs/pull/26/head' of github.com:stefanwille/crystal-redis
+157f8e3bdcf631cb7e12bd0cdd264595f497cb1f	not-for-merge	'refs/pull/27/head' of github.com:stefanwille/crystal-redis
+8d7e44805c64100dbc4c6abfb4a5f33267b77908	not-for-merge	'refs/pull/32/head' of github.com:stefanwille/crystal-redis
+a4400b5648cea998121d71b70c35723e858de5e4	not-for-merge	'refs/pull/33/head' of github.com:stefanwille/crystal-redis
+f66676d7b76a593d4818b56234a38a711e2b9428	not-for-merge	'refs/pull/35/head' of github.com:stefanwille/crystal-redis
+4678236f9cf6fec4f7b0e4cba173068711a12387	not-for-merge	'refs/pull/36/head' of github.com:stefanwille/crystal-redis
+996bc2130bbd65d717b6f968451325c73df9046d	not-for-merge	'refs/pull/38/head' of github.com:stefanwille/crystal-redis
+71296fc5790a60836d48efd140c7b299e70560e3	not-for-merge	'refs/pull/44/head' of github.com:stefanwille/crystal-redis
+63d458ffba2b75b3fd6f86943b2626a997dab6b3	not-for-merge	'refs/pull/48/head' of github.com:stefanwille/crystal-redis
+f01088e7ae748a337c04747f98170ebc9c4a0b95	not-for-merge	'refs/pull/48/merge' of github.com:stefanwille/crystal-redis
+b335f8fe9a91c434e868714b72ab2530fec7564b	not-for-merge	'refs/pull/5/head' of github.com:stefanwille/crystal-redis
+decc7a705293c57b64c6667814a87de9574979eb	not-for-merge	'refs/pull/51/head' of github.com:stefanwille/crystal-redis
+19de5319933691a83b3b85d923113211936e3bca	not-for-merge	'refs/pull/54/head' of github.com:stefanwille/crystal-redis
+d737f9804373a434aff6225f89b2efd53f6f7ab5	not-for-merge	'refs/pull/57/head' of github.com:stefanwille/crystal-redis
+eb80bc92c103239e960c06c47b23657f13d6a011	not-for-merge	'refs/pull/58/head' of github.com:stefanwille/crystal-redis
+3779c7c3af176f8f46722486f74c5cd84913ce9c	not-for-merge	'refs/pull/59/head' of github.com:stefanwille/crystal-redis
+52a8662816d7d942d1c7481983a4b941391be0c5	not-for-merge	'refs/pull/6/head' of github.com:stefanwille/crystal-redis
+31f040a182887d62d7a1e72821f14944c67d7434	not-for-merge	'refs/pull/61/head' of github.com:stefanwille/crystal-redis
+178ccd0d75df77c1321d2f3851cb11dcf04fb3f6	not-for-merge	'refs/pull/61/merge' of github.com:stefanwille/crystal-redis
+607ecb626cab8917438cd2f4bddc79df74f3bb46	not-for-merge	'refs/pull/62/head' of github.com:stefanwille/crystal-redis
+f6c1ab389a38354cce58736f6f7a8aa354dafcb9	not-for-merge	'refs/pull/63/head' of github.com:stefanwille/crystal-redis
+68840ec035a64ae4a55b7aac73b3a2c2dc9325d2	not-for-merge	'refs/pull/65/head' of github.com:stefanwille/crystal-redis
+3c9b7b2f23e9ddc587ea34e91ed8354c221ecb4c	not-for-merge	'refs/pull/66/head' of github.com:stefanwille/crystal-redis
+130173828b8b0b4a2a97e4a4b5c0cc0580574d88	not-for-merge	'refs/pull/67/head' of github.com:stefanwille/crystal-redis
+95723100a49f9ea38ad53d1d0ec4580e06f2c6f0	not-for-merge	'refs/pull/69/head' of github.com:stefanwille/crystal-redis
+507a5c8e52b76d69f7ef8d0bc4187835947f9ca0	not-for-merge	'refs/pull/7/head' of github.com:stefanwille/crystal-redis
+38d21d2e5af5fb8a29591e8444dd742ffeed40c1	not-for-merge	'refs/pull/7/merge' of github.com:stefanwille/crystal-redis
+650576200853f1efc0bd8ff6af64e7c0a6c92597	not-for-merge	'refs/pull/77/head' of github.com:stefanwille/crystal-redis
+85411f0d8fbdab3c8023427ef7e1ed5b55e36666	not-for-merge	'refs/pull/78/head' of github.com:stefanwille/crystal-redis
+571ea1c0643a21ddf8a9aa69eba4b21ed6c4d5ba	not-for-merge	'refs/pull/82/head' of github.com:stefanwille/crystal-redis
+bd9cf3edc53650d1a6a20be928097b160dfca2c5	not-for-merge	'refs/pull/85/head' of github.com:stefanwille/crystal-redis
+d7b437a8922071e72148b262e179706148b4a8f1	not-for-merge	'refs/pull/86/head' of github.com:stefanwille/crystal-redis
+8aadf56bc270f29e04e4bfffab8cbfde87e39c9d	not-for-merge	'refs/pull/87/head' of github.com:stefanwille/crystal-redis
+50a5060972282feee31c353d4039d354c144e23d	not-for-merge	'refs/pull/89/head' of github.com:stefanwille/crystal-redis
+1735d35be1b81bbcb5be4557b2fa6a3f19f913b0	not-for-merge	'refs/pull/9/head' of github.com:stefanwille/crystal-redis
+f37a818ea61b0da43bb9f38c4ffce2bcbdb5af85	not-for-merge	'refs/pull/91/head' of github.com:stefanwille/crystal-redis
+2cb28037c3f2dfa2b5e41e963d6659daf3d9fe24	not-for-merge	'refs/pull/92/head' of github.com:stefanwille/crystal-redis
+b94825151202c0eb9a73855d7384b631663b95f8	not-for-merge	'refs/pull/93/head' of github.com:stefanwille/crystal-redis
+ff2c701b2ee3c106bbfe9cd51000276ff741919a	not-for-merge	'refs/pull/95/head' of github.com:stefanwille/crystal-redis
+acfa599e61b1aebb1388311526790ccd17c1bb7c	not-for-merge	'refs/pull/96/head' of github.com:stefanwille/crystal-redis
+b40cdc0e911de25a7bd75f7fa9ba6f48bddafbfa	not-for-merge	'refs/pull/99/head' of github.com:stefanwille/crystal-redis
+bfbd00df9630acef5cea5bad6e1c125dd5b458ca	not-for-merge	tag 'v1.0.0' of github.com:stefanwille/crystal-redis
+6fb96d93c7cbcc386daaf760f4dc7b1fa1241e3a	not-for-merge	tag 'v1.0.1' of github.com:stefanwille/crystal-redis
+04ad6a93972a965195e39581d1cf962a96fc3b6f	not-for-merge	tag 'v1.1.0' of github.com:stefanwille/crystal-redis
+3754c3419f619c054286d499d4966477d0885de4	not-for-merge	tag 'v1.10.0' of github.com:stefanwille/crystal-redis
+967b36ba7d77c489482acdb3ecb38a5654de5f07	not-for-merge	tag 'v1.10.1' of github.com:stefanwille/crystal-redis
+55a06a4a5fbf041fe29e98733a161215ce731395	not-for-merge	tag 'v1.11.0' of github.com:stefanwille/crystal-redis
+083076068529b91b64c9840da13c10f2d6faec82	not-for-merge	tag 'v1.2.0' of github.com:stefanwille/crystal-redis
+38db08c6e1bcb2bc7d07453dafb21d9538de3ccf	not-for-merge	tag 'v1.2.1' of github.com:stefanwille/crystal-redis
+5b1c55574f96a9975724decad578502474b0af47	not-for-merge	tag 'v1.3.0' of github.com:stefanwille/crystal-redis
+a6a82a63b6bec87ffe3226ca6700fe67fd6794fa	not-for-merge	tag 'v1.3.1' of github.com:stefanwille/crystal-redis
+012c313cacd0c617db94d06686ff23745eff5734	not-for-merge	tag 'v1.4.0' of github.com:stefanwille/crystal-redis
+8350ab76690454ff5d02abd9ff934065bac88c14	not-for-merge	tag 'v1.5.0' of github.com:stefanwille/crystal-redis
+41d8815cabc808e2f6093a3c738e517f35975ce6	not-for-merge	tag 'v1.5.1' of github.com:stefanwille/crystal-redis
+da05f9b6551e3e06c3abb018085f520d5775bfff	not-for-merge	tag 'v1.5.2' of github.com:stefanwille/crystal-redis
+7510bb7031509d450a1b35135668560c128d7b4a	not-for-merge	tag 'v1.6.0' of github.com:stefanwille/crystal-redis
+36c4541979320bbe1cd83cf91be2ad6625f398d3	not-for-merge	tag 'v1.6.1' of github.com:stefanwille/crystal-redis
+4a910e1fcf71702614f93a0e4055d71f49b907bf	not-for-merge	tag 'v1.6.2' of github.com:stefanwille/crystal-redis
+f52eb72c29857c08a979f5411d4a2708c20e6d35	not-for-merge	tag 'v1.6.3' of github.com:stefanwille/crystal-redis
+103e8a78587e41a59c217bcb88c2e4f8ac922e48	not-for-merge	tag 'v1.6.4' of github.com:stefanwille/crystal-redis
+c9a8c90145c782b55f4ef0e8f9a934d51b577a14	not-for-merge	tag 'v1.6.5' of github.com:stefanwille/crystal-redis
+bf5909dcd15222198e6f7811b0c21d6649dab599	not-for-merge	tag 'v1.6.6' of github.com:stefanwille/crystal-redis
+795509339a0edc9665a647edea0ffdec478186b1	not-for-merge	tag 'v1.6.7' of github.com:stefanwille/crystal-redis
+ecf671fa0dd6e522aee5ab52afc03de1ebb46dd2	not-for-merge	tag 'v1.7.0' of github.com:stefanwille/crystal-redis
+011d174755512feab19ef88711fcd7e0c9567ed9	not-for-merge	tag 'v1.7.1' of github.com:stefanwille/crystal-redis
+f8d982f4d6fd37709f9ca8ed8a5f32c8d47c2e6c	not-for-merge	tag 'v1.8.0' of github.com:stefanwille/crystal-redis
+a8e1a72594e7bfa6aaff86e666895b4708283bbd	not-for-merge	tag 'v1.9.0' of github.com:stefanwille/crystal-redis
+08e5d9ae241df5955140525b1e68354ce21d4477	not-for-merge	tag 'v2.0.0' of github.com:stefanwille/crystal-redis
+fbac6d60e791c062411348df4a0c7880e47b0c81	not-for-merge	tag 'v2.1.0' of github.com:stefanwille/crystal-redis
+b9519aa82fb804a7ec16da4a2172d12cc166fcc4	not-for-merge	tag 'v2.1.1' of github.com:stefanwille/crystal-redis
+7eb71a275151ec5cfa0f9463933a943f464bf340	not-for-merge	tag 'v2.2.0' of github.com:stefanwille/crystal-redis
+aaaab9e8405f90c931f82106814d3ad0cbf4ccad	not-for-merge	tag 'v2.2.1' of github.com:stefanwille/crystal-redis
+14f0c6a044f586d7cb251d27bde0e085f0be70db	not-for-merge	tag 'v2.3.0' of github.com:stefanwille/crystal-redis
+15770cbf0ed4b77292e4dfab31d27bb4cc1b1ad7	not-for-merge	tag 'v2.4.0' of github.com:stefanwille/crystal-redis
+e50873d502724e2fd685b28442e944e91ebb2509	not-for-merge	tag 'v2.4.1' of github.com:stefanwille/crystal-redis
+3250c2434cad72df45632366269074e8d01c0e94	not-for-merge	tag 'v2.5.0' of github.com:stefanwille/crystal-redis
+af5ea30b3864b9ab801f8e287075a626810d3080	not-for-merge	tag 'v2.5.1' of github.com:stefanwille/crystal-redis
+f6c13b9891e7df5d33048d5575e97c4e5a114c23	not-for-merge	tag 'v2.5.2' of github.com:stefanwille/crystal-redis
+90e656e1764e97dcd4fff22143df5ffadf65a84d	not-for-merge	tag 'v2.5.3' of github.com:stefanwille/crystal-redis
+009e35fa40bbd518798afcc32c397402c6c6acb2	not-for-merge	tag 'v2.6.0' of github.com:stefanwille/crystal-redis
+e81d33945592688c07add1274b811c06d0e4ee26	not-for-merge	tag 'v2.7.0' of github.com:stefanwille/crystal-redis
+5e2ab961bb5927e32629e61a3f2e31891d024e50	not-for-merge	tag 'v2.8.0' of github.com:stefanwille/crystal-redis
+5906938d21ae10733c396397cdedd09a6941c919	not-for-merge	tag 'v2.8.1' of github.com:stefanwille/crystal-redis
+40761b21957beee1cd026d1a960aa36cb639aa67	not-for-merge	tag 'v2.8.2' of github.com:stefanwille/crystal-redis
+fa7121fb3acc4b9ffb951ecb716f767f59b4ce8d	not-for-merge	tag 'v2.8.3' of github.com:stefanwille/crystal-redis
+9f4bfb4dcd887c9d02bb29bbc73f8ad46e886c41	not-for-merge	tag 'v2.9.0' of github.com:stefanwille/crystal-redis
+5fc089cc4f73f08eb42170cb82e30205369a18ad	not-for-merge	tag 'v2.9.1' of github.com:stefanwille/crystal-redis
