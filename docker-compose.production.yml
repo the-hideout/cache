@@ -5,6 +5,7 @@ services:
     environment:
       CRYSTAL_DEBUG: "1"
       KEMAL_ENV: production
+      # CRYSTAL_ENV: production
     networks:
       - cache
       - ingress
