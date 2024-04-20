@@ -9,6 +9,7 @@ COPY script/postinstall script/postinstall
 
 # copy all vendored dependencies
 COPY lib/ lib/
+COPY .cache/ .cache/
 
 # copy shard files
 COPY shard.lock shard.lock
