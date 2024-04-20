@@ -36,24 +36,24 @@ end
 # If the item is not found, a 404 error is returned
 get "/api/cache" do |env|
   # Get and validate the key query string parameter
-  key = env.params.query["key"]? || ""
-  if key.empty?
+  key : String = env.params.query["key"]? || ""
+  if key.nil? || key.empty?
     halt env, status_code: 400, response: "key query parameter is required"
   end
 
   # Check the cache for the key
-  val = redis.get(key)
-
-  # only convert the value to a string if it is not nil
-  val = val.to_s unless val.nil?
+  val : String | Nil = redis.get(key)
 
   # If the item is not found, return a 404 error
-  if val.nil?
+  if val.nil? || val.empty?
     halt env, status_code: 404, response: "key not found"
   end
 
-  # Get the items TTL in Redis
-  item_ttl = redis.ttl(key)
+  # convert the value to a string
+  val = val.to_s
+
+  # Get the item's TTL in Redis
+  item_ttl : Int64 = redis.ttl(key)
 
   # Set the X-CACHE-TTL header for when the item expires
   env.response.headers["X-CACHE-TTL"] = item_ttl.to_s
@@ -69,8 +69,8 @@ end
 # If the item is successfully added, return a success message
 post "/api/cache" do |env|
   # Parse the request body
-  key = env.params.json["key"].as(String)
-  value = env.params.json["value"].as(String)
+  key : String = env.params.json["key"].as(String)
+  value : String = env.params.json["value"].as(String)
 
   # check to see if the ttl is provided in the request body, if not the default ttl will be used later on
   begin
@@ -80,7 +80,6 @@ post "/api/cache" do |env|
   rescue e : TypeCastError
     # if that fails, assume the ttl is a whole number
     ttl = env.params.json["ttl"]
-    puts "the ttl is #{ttl}"
   end
 
   if key.empty? || value.empty?
@@ -97,6 +96,12 @@ post "/api/cache" do |env|
   begin
     redis.set(key, value, ex: ttl)
   rescue e : Redis::Error
+    # if the error is due to the payload being too large, return a 400 error
+    if e.message.try(&.includes?("ERR Protocol error: too big bulk count string"))
+      Log.warn { "payload over 512mb, cannot cache due to hard limits in redis" }
+      halt env, status_code: 400, response: "payload too large to cache"
+    end
+
     Log.error { "Failed to cache item in redis: #{e.message} - #{e.backtrace}" }
     halt env, status_code: 500, response: "failed to cache item"
   end
