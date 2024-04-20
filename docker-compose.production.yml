@@ -3,6 +3,7 @@
 services:
   cache:
     environment:
+      CRYSTAL_DEBUG: "1"
       KEMAL_ENV: production
     networks:
       - cache
