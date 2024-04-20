@@ -29,7 +29,7 @@ FROM crystallang/crystal:1.12.1
 RUN apt-get update && apt-get install -y curl
 
 # create a non-root user for security
-RUN adduser -D nonroot
+RUN useradd -m nonroot
 USER nonroot
 
 WORKDIR /app
