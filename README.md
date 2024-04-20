@@ -1,6 +1,6 @@
 # cache ♻️
 
-[![acceptance](https://github.com/the-hideout/cache/actions/workflows/acceptance.yml/badge.svg)](https://github.com/the-hideout/cache/actions/workflows/acceptance.yml)
+[![acceptance](https://github.com/the-hideout/cache/actions/workflows/acceptance.yml/badge.svg)](https://github.com/the-hideout/cache/actions/workflows/acceptance.yml) [![build](https://github.com/the-hideout/cache/actions/workflows/build.yml/badge.svg)](https://github.com/the-hideout/cache/actions/workflows/build.yml) [![lint](https://github.com/the-hideout/cache/actions/workflows/lint.yml/badge.svg)](https://github.com/the-hideout/cache/actions/workflows/lint.yml) [![test](https://github.com/the-hideout/cache/actions/workflows/test.yml/badge.svg)](https://github.com/the-hideout/cache/actions/workflows/test.yml)
 
 A caching service using [Caddy](https://caddyserver.com/) + [Gin](https://github.com/gin-gonic/gin) + [Redis](https://redis.io/) with docker-compose
 
