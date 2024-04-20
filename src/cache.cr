@@ -19,7 +19,7 @@ end
 config = config()
 
 # Create a new redis client
-redis = Redis::PooledClient.new(host: config["redis_host"].as_s, port: config["redis_port"].as_i, pool_size: 5, pool_timeout: 5.0)
+redis = Redis::PooledClient.new(host: config["redis_host"].as_s, port: config["redis_port"].as_i, pool_size: 10, pool_timeout: 5.0)
 
 # Health endpoint
 get "/health" do
