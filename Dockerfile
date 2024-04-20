@@ -1,4 +1,4 @@
-FROM crystallang/crystal:1.12.1-alpine as builder
+FROM crystallang/crystal:1.12.1 as builder
 
 WORKDIR /app
 
@@ -26,7 +26,7 @@ COPY . .
 # build the project
 RUN script/build
 
-FROM crystallang/crystal:1.12.1-alpine
+FROM crystallang/crystal:1.12.1
 
 # add curl for healthchecks
 RUN apk add curl
