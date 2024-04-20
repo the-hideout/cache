@@ -5,6 +5,19 @@ set -e
 # set the working directory to the root of the project
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
 
+# check to ensure both crystal and shards are installed
+if ! [ -x "$(command -v crystal)" ]; then
+  echo "Error: crystal is not installed."
+  echo "Please install crystal via crenv -> https://github.com/crenv/crenv"
+  exit 1
+fi
+
+if ! [ -x "$(command -v shards)" ]; then
+  echo "Error: shards is not installed."
+  echo "Please install crystal (comes with shards) via crenv -> https://github.com/crenv/crenv"
+  exit 1
+fi
+
 script/preinstall
 
 shards install --frozen $@
