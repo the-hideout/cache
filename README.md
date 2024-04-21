@@ -2,13 +2,13 @@
 
 [![acceptance](https://github.com/the-hideout/cache/actions/workflows/acceptance.yml/badge.svg)](https://github.com/the-hideout/cache/actions/workflows/acceptance.yml) [![build](https://github.com/the-hideout/cache/actions/workflows/build.yml/badge.svg)](https://github.com/the-hideout/cache/actions/workflows/build.yml) [![lint](https://github.com/the-hideout/cache/actions/workflows/lint.yml/badge.svg)](https://github.com/the-hideout/cache/actions/workflows/lint.yml) [![test](https://github.com/the-hideout/cache/actions/workflows/test.yml/badge.svg)](https://github.com/the-hideout/cache/actions/workflows/test.yml)
 
-A caching service using [Caddy](https://caddyserver.com/) + [Gin](https://github.com/gin-gonic/gin) + [Redis](https://redis.io/) with docker-compose
+A caching service using [crystal-lang](https://github.com/crystal-lang/crystal) + [Redis](https://redis.io/) with docker-compose
 
 This service is used to cache all GraphQL responses from the main [Tarkov API](https://github.com/the-hideout/tarkov-api) in order to provide maximum performance ⚡
 
 ## About ⭐
 
-This service exists to cache all response from the [Tarkov API](https://github.com/the-hideout/tarkov-api) for performance and to reduce load on our cloudflare workers. It is written in GoLang and is as simple as it needs to be.
+This service exists to cache all response from the [Tarkov API](https://github.com/the-hideout/tarkov-api) for performance and to reduce load on our cloudflare workers. It is written in [crystal](https://github.com/crystal-lang/crystal) and is as simple as it needs to be.
 
 This service caches requests only for a short period of time in order to keep data fresh and response times low
 
@@ -22,9 +22,10 @@ This service works by doing the following:
 
 Traffic flow:
 
-1. Request hits the reverse proxy (caddy)
-2. The request is routed to the backend caching service (FastAPI)
+1. Request hits the reverse proxy (caddy) - hosted on a VPS
+2. The request is routed to the backend caching service (this caching service here!)
 3. The request can either be a GET (retrieves from the cache) or a POST (saves to the cache)
+4. GET requests fetch data from the redis cache and POST requests save data to the redis cache
 
 ## Usage 🔨
 
@@ -60,44 +61,37 @@ To use this repo do the following:
 
 That's it!
 
-## TLS Certificate 🔐
-
-Caddy automatically provisions TLS certificates for you. In order to make use of this awesome feature, do the following:
-
-1. Ensure your server has ports `80` and `443` open
-1. Have a DNS record pointed to your server for the domain you wish to obtain a certificate for (e.g. `app.example.org` -> `<IP address>`)
-1. Export the env var for the domain you wish to use:
-
-    ```bash
-    export DOMAIN=app.example.org
-    ```
-
-1. Start the docker-compose stack:
-
-   ```bash
-   docker-compose up --build
-   ```
-
-1. Navigate to your domain and enjoy your easy TLS setup with Caddy! -> [https://app.example.org](https://app.example.orgg)
-
 ## Extra Info 📚
 
 Here is some extra info about the setup!
 
 ### Volumes 🛢️
 
-The docker-compose file creates three volumes:
+The docker-compose file creates one volume:
 
-- `./data/caddy_data:/data`
-- `./data/caddy_config:/config`
 - `./data/redis:/data`
 
-The config volume is used to mount Caddy configuration and Redis data
+The config volume is used to mount Redis data so it can be persisted between container restarts in production.
 
-The data volume is used to store certificate information. This is really important so that you are not re-requesting TLS certs each time you start your container. Doing so can cause you to hit Let's Encrypt rate limits that will prevent you from provisioning certificates
+## Contributing 🤝
 
-### Environment Variables 📝
+To get started quickly with this project, you will need the following installed:
 
-If you run the stack without the `DOMAIN` variable set in your environment, the stack will default to using `localhost`. This is ideal for testing out the stack locally.
+- [crystal](https://github.com/crystal-lang/crystal) ([crenv](https://github.com/crenv/crenv) is suggested)
+- [docker compose](https://docs.docker.com/compose/)
+- [bash](https://www.gnu.org/software/bash/)
 
-If you set the `DOMAIN` variable, Caddy will attempt to provision a certificate for that domain. In order to do so, you will need DNS records pointed to that domain and you will need need traffic to access your server via port `80` and `443`
+To get your repo setup for development do the following:
+
+1. Clone the repo
+2. Ensure your version of crystal matches the version in [`.crystal-version`](.crystal-version)
+3. Run the following command:
+
+  ```bash
+  script/bootstrap
+  ```
+
+1. Congrats you're ready to start developing!
+2. Write some code
+3. Run `script/accepance` to run acceptance test and ensure your changes will work
+4. Open a pull request 🎉
