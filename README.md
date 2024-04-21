@@ -80,6 +80,7 @@ To get started quickly with this project, you will need the following installed:
 - [crystal](https://github.com/crystal-lang/crystal) ([crenv](https://github.com/crenv/crenv) is suggested)
 - [docker compose](https://docs.docker.com/compose/)
 - [bash](https://www.gnu.org/software/bash/)
+- [yq](https://github.com/mikefarah/yq)
 
 To get your repo setup for development do the following:
 
