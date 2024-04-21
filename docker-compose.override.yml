@@ -3,7 +3,9 @@
 services:
   cache:
     environment:
-      GIN_MODE: debug
+      LOG_LEVEL: DEBUG
+      KEMAL_ENV: development
+      CRYSTAL_ENV: development
     networks:
       - cache
   

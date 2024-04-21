@@ -3,7 +3,9 @@
 services:
   cache:
     environment:
-      GIN_MODE: release
+      LOG_LEVEL: DEBUG
+      KEMAL_ENV: production
+      CRYSTAL_ENV: production
     networks:
       - cache
       - ingress

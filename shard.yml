@@ -1,0 +1,24 @@
+name: cache
+version: 0.18.0
+
+authors:
+  - GrantBirki
+
+targets:
+  cache:
+    main: src/cache.cr
+
+crystal: ">= 1.12.1"
+
+license: MIT
+
+dependencies:
+  kemal:
+    github: kemalcr/kemal
+  redis:
+    github: stefanwille/crystal-redis
+
+development_dependencies:
+  ameba:
+    github: crystal-ameba/ameba
+    version: ~> 1.6.1

@@ -17,10 +17,8 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: json-yaml-validate
-        uses: GrantBirki/json-yaml-validate@v2.6.1
+        uses: GrantBirki/json-yaml-validate@v2
         with:
           comment: "true"
-          json_schema: "config/schema.json"
-          base_dir: src/cache
-          json_exclude_regex: ".*/vendor/.*"
-          yaml_exclude_regex: ".*/vendor/.*"
+          json_schema: ".github/schema/schema.json"
+          base_dir: config/

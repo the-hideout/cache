@@ -2,6 +2,8 @@ __pycache__
 creds.env
 *.pem
 
+.cache/shards/*
+
 # container volume files
 data/*
 !data/.gitkeep
@@ -10,3 +12,10 @@ data/*
 terraform.auto.tfvars.json
 terraform/.terraform/providers
 **/.terraform/*
+
+/bin/
+/.shards/
+*.dwarf
+dist/
+
+tmp/
