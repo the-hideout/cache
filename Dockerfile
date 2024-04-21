@@ -2,6 +2,9 @@ FROM crystallang/crystal:1.12.1 as builder
 
 WORKDIR /app
 
+# install build dependencies
+RUN apt-get update && apt-get install -y yq
+
 # copy core scripts
 COPY script/preinstall script/preinstall
 COPY script/bootstrap script/bootstrap
