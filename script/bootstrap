@@ -26,13 +26,6 @@ if ! [ -x "$(command -v shards)" ]; then
   exit 1
 fi
 
-# check to ensure yq is installed
-if ! [ -x "$(command -v yq)" ]; then
-  echo -e "❌ ${RED}Error${OFF}: yq is not installed"
-  echo "Please install yq -> https://github.com/mikefarah/yq"
-  exit 1
-fi
-
 compatability_warning=""
 
 # Get OS info
