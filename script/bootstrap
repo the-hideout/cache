@@ -51,9 +51,11 @@ else
   os="unknown"
 fi
 
-# print the warning if it isn't an empty string
-if [ ! -z "$compatability_warning" ]; then
+# print the warning if it isn't an empty string and SUPPRESS_BOOTSTRAP_WARNINGS is not true
+if [[ ! -z "$compatability_warning" && "$SUPPRESS_BOOTSTRAP_WARNINGS" != "true" ]]; then
   echo -e "$compatability_warning"
+  echo ""
+  echo -e "You can set ${PURPLE}SUPPRESS_BOOTSTRAP_WARNINGS=true${OFF} in your environment to suppress this warning"
 fi
 
 script/preinstall
