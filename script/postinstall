@@ -8,7 +8,7 @@ mkdir -p "$DIR/bin"
 # ensure the ameba binary is built and available in the bin directory
 AMEBA_UP_TO_DATE=false
 # first, check the version of the ameba binary in the lock file
-AMEBA_VERSION=$(yq e '.shards.ameba.version' shard.lock)
+AMEBA_VERSION=$(shards list | grep ameba | awk '{print $3}' | tr -d '()')
 
 # if the bin/ameba binary exists, check if it is the correct version
 if [ -f "$DIR/bin/ameba" ]; then
@@ -17,8 +17,8 @@ if [ -f "$DIR/bin/ameba" ]; then
     AMEBA_UP_TO_DATE=true
   else
     echo "ameba binary is not up to date"
-    echo "ameba binary version: $CURRENT_VERSION"
-    echo "ameba lock file version: $AMEBA_VERSION"
+    echo "ameba version (./bin/ameba): $CURRENT_VERSION"
+    echo "ameba version (shards list): $AMEBA_VERSION"
     AMEBA_UP_TO_DATE=false
   fi
 fi
