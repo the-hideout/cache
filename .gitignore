@@ -1,8 +1,17 @@
+# crystal
+.cache/shards/*
+tmp/
+bin/
+.shards/
+
+# non-critical vendored crystal files
+lib/**/.github/
+lib/**/docs/
+lib/**/examples/
+
 __pycache__
 creds.env
 *.pem
-
-.cache/shards/*
 
 # container volume files
 data/*
@@ -13,9 +22,5 @@ terraform.auto.tfvars.json
 terraform/.terraform/providers
 **/.terraform/*
 
-/bin/
-/.shards/
 *.dwarf
 dist/
-
-tmp/
