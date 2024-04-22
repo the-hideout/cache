@@ -8,6 +8,7 @@ COPY script/bootstrap script/bootstrap
 COPY script/postinstall script/postinstall
 
 # copy all vendored dependencies
+COPY .cache/ .cache/
 COPY lib/ lib/
 
 # copy shard files
