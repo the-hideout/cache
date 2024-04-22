@@ -65,6 +65,6 @@ fi
 
 script/preinstall
 
-SHARDS_CACHE_PATH="$DIR/.cache/shards" shards install --frozen $@
+SHARDS_CACHE_PATH="$DIR/.cache/shards" shards install --frozen --local $@
 
 script/postinstall
