@@ -1,5 +1,4 @@
 # crystal
-.cache/shards/
 tmp/
 bin/
 .shards/

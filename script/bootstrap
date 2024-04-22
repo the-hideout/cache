@@ -65,6 +65,10 @@ fi
 
 script/preinstall
 
+echo "cache dir: $DIR/.cache/shards"
+
+ls -lah $DIR/.cache/shards/github.com/kemalcr/kemal.git
+
 SHARDS_CACHE_PATH="$DIR/.cache/shards" shards install --frozen --local $@
 
 script/postinstall
