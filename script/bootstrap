@@ -65,6 +65,8 @@ fi
 
 script/preinstall
 
+shards --version
+
 SHARDS_CACHE_PATH="$DIR/.cache/shards" shards install --frozen --local $@
 
 # debugging
