@@ -28,6 +28,8 @@ jobs:
           crystal: ${{ steps.crystal-version.outputs.crystal }}
 
       - name: bootstrap
+        env:
+          SHARDS_CACHE_PATH: ".cache/shards"
         run: script/bootstrap --verbose
 
       - name: build
