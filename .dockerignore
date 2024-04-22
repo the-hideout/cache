@@ -1,12 +1,12 @@
-docs/
 .github/
 bin/
+docs/
 data/
+tmp/
+docker-compose.yml
+docker-compose.override.yml
+docker-compose.production.yml
 LICENSE
 Makefile
 README.md
 SECURITY.md
-docker-compose.yml
-docker-compose.override.yml
-docker-compose.production.yml
-tmp/
