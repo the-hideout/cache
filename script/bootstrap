@@ -67,4 +67,8 @@ script/preinstall
 
 SHARDS_CACHE_PATH="$DIR/.cache/shards" shards install --frozen --local $@
 
+# debugging
+ls -lah "$DIR/.cache/shards"
+ls -lah "$DIR/.cache/shards/github.com/kemalcr/kemal.git/refs/tags/"
+
 script/postinstall
