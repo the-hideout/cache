@@ -2,8 +2,6 @@
 	repositoryformatversion = 0
 	filemode = true
 	bare = true
-	ignorecase = true
-	precomposeunicode = true
 	askpass = true
 [init]
 	templatedir = 
