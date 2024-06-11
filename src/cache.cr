@@ -68,33 +68,36 @@ end
 # Endpoint to add an item to the in-memory redis cache
 # If the item is successfully added, return a success message
 post "/api/cache" do |env|
-  # Parse the request body
-  key : String = env.params.json["key"].as(String)
-  value : String = env.params.json["value"].as(String)
-
-  # check to see if the ttl is provided in the request body, if not the default ttl will be used later on
   begin
-    # first try to cast the ttl to a string
-    ttl = env.params.json["ttl"]?.try(&.as(String))
-    ttl = nil if !ttl.nil? && ttl.empty?
-  rescue e : TypeCastError
-    # if that fails, assume the ttl is a whole number
-    ttl = env.params.json["ttl"]
-  end
+    # Parse the request body
+    key : String = env.params.json["key"].as(String)
+    value : String = env.params.json["value"].as(String)
 
-  if key.empty? || value.empty?
-    halt env, status_code: 400, response: "key and value params are required in payload body"
-  end
+    # check to see if the ttl is provided in the request body, if not the default ttl will be used later on
+    begin
+      # first try to cast the ttl to a string
+      ttl = env.params.json["ttl"]?.try(&.as(String))
+      ttl = nil if !ttl.nil? && ttl.empty?
+    rescue e : TypeCastError
+      # if that fails, assume the ttl is a whole number
+      ttl = env.params.json["ttl"]
+    end
 
-  # if the ttl is nil, use the default ttl
-  ttl = config["ttl"].as_i if ttl.nil?
+    if key.empty? || value.empty?
+      halt env, status_code: 400, response: "key and value params are required in payload body"
+    end
 
-  # if the ttl happens to be a string, convert it to an integer now
-  ttl = ttl.to_i if ttl.is_a?(String)
+    # if the ttl is nil, use the default ttl
+    ttl = config["ttl"].as_i if ttl.nil?
 
-  # Add the item to the cache
-  begin
+    # if the ttl happens to be a string, convert it to an integer now
+    ttl = ttl.to_i if ttl.is_a?(String)
+
+    # Add the item to the cache
     redis.set(key, value, ex: ttl)
+  rescue e : JSON::ParseException
+    Log.error { "JSON parsing error: #{e.message}" }
+    halt env, status_code: 400, response: {"error" => "Malformed JSON input"}.to_json
   rescue e : Redis::Error
     # if the error is due to the payload being too large, return a 400 error
     if e.message.try(&.includes?("ERR Protocol error: too big bulk count string"))
