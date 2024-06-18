@@ -57,6 +57,7 @@ func main() {
 		Addr:     fmt.Sprintf("%s:%.0f", config["redis_host"], config["redis_port"]),
 		Password: "", // no password set
 		DB:       0,  // use default DB
+		PoolSize: 20, // use a pool size of 20
 	})
 
 	// Create a new gin router
