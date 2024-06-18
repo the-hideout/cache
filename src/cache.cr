@@ -17,8 +17,8 @@ end
 REDIS = Redis::PooledClient.new(
   host: CONFIG["redis_host"].as_s,
   port: CONFIG["redis_port"].as_i,
-  pool_size: 10,
-  pool_timeout: 5.0
+  pool_size: 5,
+  pool_timeout: 2.0
 )
 
 # Health endpoint
