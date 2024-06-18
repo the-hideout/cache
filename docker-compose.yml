@@ -14,8 +14,8 @@ services:
     container_name: cache
     restart: unless-stopped
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ./src/cache
+      dockerfile: ./Dockerfile
     ports:
       - 8080:8080
     healthcheck:
