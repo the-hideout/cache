@@ -7,19 +7,19 @@ Log.setup_from_env(default_level: :info)
 
 Log.info { "Starting the application" }
 
-def config
-  # Read config file
+# Load and parse config file once
+CONFIG = begin
   config_file = File.read("config/config.json")
-
-  # Parse the bytes into the interface (unstructured data)
   JSON.parse(config_file).as_h
 end
 
-# Load the config file
-config = config()
-
-# Create a new redis client
-redis = Redis::PooledClient.new(host: config["redis_host"].as_s, port: config["redis_port"].as_i, pool_size: 10, pool_timeout: 5.0)
+# Create a new Redis client with optimal pool size and timeout
+REDIS = Redis::PooledClient.new(
+  host: CONFIG["redis_host"].as_s,
+  port: CONFIG["redis_port"].as_i,
+  pool_size: 10,
+  pool_timeout: 5.0
+)
 
 # Health endpoint
 get "/health" do
@@ -42,7 +42,7 @@ get "/api/cache" do |env|
   end
 
   # Check the cache for the key
-  val : String | Nil = redis.get(key)
+  val : String | Nil = REDIS.get(key)
 
   # If the item is not found, return a 404 error
   if val.nil? || val.empty?
@@ -53,7 +53,7 @@ get "/api/cache" do |env|
   val = val.to_s
 
   # Get the item's TTL in Redis
-  item_ttl : Int64 = redis.ttl(key)
+  item_ttl : Int64 = REDIS.ttl(key)
 
   # Set the X-CACHE-TTL header for when the item expires
   env.response.headers["X-CACHE-TTL"] = item_ttl.to_s
@@ -87,14 +87,14 @@ post "/api/cache" do |env|
   end
 
   # if the ttl is nil, use the default ttl
-  ttl = config["ttl"].as_i if ttl.nil?
+  ttl = CONFIG["ttl"].as_i if ttl.nil?
 
   # if the ttl happens to be a string, convert it to an integer now
   ttl = ttl.to_i if ttl.is_a?(String)
 
   # Add the item to the cache
   begin
-    redis.set(key, value, ex: ttl)
+    REDIS.set(key, value, ex: ttl)
   rescue e : Redis::Error
     # if the error is due to the payload being too large, return a 400 error
     if e.message.try(&.includes?("ERR Protocol error: too big bulk count string"))
