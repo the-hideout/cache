@@ -1,15 +1,3 @@
-# crystal
-.cache/shards/*
-tmp/
-bin/
-.shards/
-
-# non-critical vendored crystal files
-lib/**/.github/
-lib/**/docs/
-lib/**/examples/
-lib/**/spec/
-
 __pycache__
 creds.env
 *.pem
@@ -22,6 +10,3 @@ data/*
 terraform.auto.tfvars.json
 terraform/.terraform/providers
 **/.terraform/*
-
-*.dwarf
-dist/
