@@ -89,7 +89,7 @@ post "/api/cache" do |env|
   # reject the request if the value is over 100mb
   if value.bytesize > 100_000_000
     halt env, status_code: 400, response: "value is too large, must be under 100mb"
-  end 
+  end
 
   # if the ttl is nil, use the default ttl
   ttl = CONFIG["ttl"].as_i if ttl.nil?
