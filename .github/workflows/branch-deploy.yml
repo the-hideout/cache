@@ -25,6 +25,7 @@ jobs:
           admins_pat: ${{ secrets.BRANCH_DEPLOY_ADMINS_PAT }}
           environment_targets: production
           sticky_locks: "true"
+          allow_sha_deployments: "true"
 
       - name: checkout
         if: ${{ steps.branch-deploy.outputs.continue == 'true' }}
