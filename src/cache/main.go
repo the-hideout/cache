@@ -104,6 +104,10 @@ func main() {
 			return
 		}
 
+		sentry.ConfigureScope(func(scope *sentry.Scope) {
+			scope.SetTag("query.key", key)
+		})
+
 		// Check the cache for the key
 		val, err := rdb.Get(ctx, key).Result()
 
@@ -149,6 +153,10 @@ func main() {
 			return
 		}
 
+		sentry.ConfigureScope(func(scope *sentry.Scope) {
+			scope.SetTag("query.key", requestBody.Key)
+		})
+
 		// Create the ttl variable to store the TTL of the item
 		var ttl time.Duration
 
@@ -173,6 +181,10 @@ func main() {
 			// Convert the TTL into a time.Duration in seconds
 			ttl = time.Duration(int(ttlInt)) * time.Second
 		}
+
+		sentry.ConfigureScope(func(scope *sentry.Scope) {
+			scope.SetTag("query.ttl", ttl.String())
+		})
 
 		// Add the item to the cache
 		err := rdb.Set(ctx, requestBody.Key, requestBody.Value, ttl).Err()
