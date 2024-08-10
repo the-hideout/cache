@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -13,6 +14,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v9"
+
+	sentry "github.com/getsentry/sentry-go"
+	sentrygin "github.com/getsentry/sentry-go/gin"
 )
 
 // A schema for storing items in the in-memory cache
@@ -49,6 +53,19 @@ func config() map[string]interface{} {
 
 func main() {
 
+	err := sentry.Init(sentry.ClientOptions{
+		Dsn: "https://4b25273b58ccdf45a8d574fc0a26dbee@sentry.thaddeus.io/5",
+		// Set TracesSampleRate to 1.0 to capture 100%
+		// of transactions for performance monitoring.
+		// We recommend adjusting this value in production,
+		EnableTracing:    true,
+		TracesSampleRate: 1,
+		Debug:            true,
+	})
+	if err != nil {
+		log.Fatalf("sentry.Init: %s", err)
+	}
+
 	// Load the config file
 	config := config()
 
@@ -62,6 +79,9 @@ func main() {
 
 	// Create a new gin router
 	r := gin.Default()
+
+	// Use the sentry middleware
+	r.Use(sentrygin.New(sentrygin.Options{}))
 
 	// Health endpoint
 	r.GET("/health", func(c *gin.Context) {
