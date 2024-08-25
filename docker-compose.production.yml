@@ -9,6 +9,14 @@ services:
       - ingress
 
   redis:
+    command:
+      [
+        "redis-server",
+        "--maxmemory",
+        "2gb",
+        "--maxmemory-policy",
+        "allkeys-lru"
+      ]
     volumes:
       - ./data/redis:/data
     networks:

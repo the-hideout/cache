@@ -7,6 +7,14 @@ services:
     ports:
       - 6379:6379
     restart: unless-stopped
+    command:
+      [
+        "redis-server",
+        "--maxmemory",
+        "1gb",
+        "--maxmemory-policy",
+        "allkeys-lru"
+      ]
     healthcheck:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
 
@@ -19,10 +27,15 @@ services:
     ports:
       - 8080:8080
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
       interval: 30s
       timeout: 5s
       retries: 3
       start_period: 15s
+    environment:
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-}
+      SENTRY_RELEASE: ${SENTRY_RELEASE:-cache@local}
+      SENTRY_TRACE_RATE: ${SENTRY_TRACE_RATE:-1.0}
     depends_on:
       - redis
