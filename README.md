@@ -1,5 +1,7 @@
 # cache ♻️
 
+[![deploy](https://github.com/the-hideout/cache/actions/workflows/deploy.yml/badge.svg)](https://github.com/the-hideout/cache/actions/workflows/deploy.yml)
+[![config validation](https://github.com/the-hideout/cache/actions/workflows/config-validation.yml/badge.svg)](https://github.com/the-hideout/cache/actions/workflows/config-validation.yml)
 [![acceptance](https://github.com/the-hideout/cache/actions/workflows/acceptance.yml/badge.svg)](https://github.com/the-hideout/cache/actions/workflows/acceptance.yml)
 
 A caching service using [Caddy](https://caddyserver.com/) + [Gin](https://github.com/gin-gonic/gin) + [Redis](https://redis.io/) with docker-compose
