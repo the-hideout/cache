@@ -30,8 +30,8 @@ cd "$DIR/src/cache"
 
 echo "Bootstrapping the project..."
 
-go mod vendor
 go mod tidy
+go mod vendor
 go mod verify
 
 echo "Done!"
