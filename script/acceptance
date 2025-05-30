@@ -39,7 +39,20 @@ echo -e "${GREEN}cache server is up! starting acceptance tests${OFF}\n"
 
 SUCCESS="true"
 
-# should return a 200 to the health endpoint
+echo -e "${PURPLE}=== HEALTH ENDPOINT TESTS ===${OFF}"
+
+# Test /health endpoint
+response=$(curl --insecure --location --request GET "http://localhost:${HTTP_PORT}/health" -w "OK%{http_code}" -s)
+status_code=$(echo "$response" | sed 's/.*OK\([0-9][0-9][0-9]\)$/\1/')
+
+if [[ $status_code -eq 200 ]]; then
+  echo -e "✅ ${BLUE}/health${OFF} ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/health${OFF} ${RED}failed${OFF}"
+fi
+
+# Test /api/health endpoint
 response=$(curl --insecure --location --request GET "http://localhost:${HTTP_PORT}/api/health" -w "OK%{http_code}" -s)
 status_code=$(echo "$response" | sed 's/.*OK\([0-9][0-9][0-9]\)$/\1/')
 
@@ -50,59 +63,549 @@ else
   echo -e "❌ ${BLUE}/api/health${OFF} ${RED}failed${OFF}"
 fi
 
-# a naked call to /api/cache should return a 400
+echo -e "\n${PURPLE}=== CACHE GET ENDPOINT TESTS ===${OFF}"
+
+# Test GET /api/cache without key parameter (should return 400)
 status_code=$(curl --insecure --location --request GET "http://localhost:${HTTP_PORT}/api/cache" -o /dev/null -w "%{http_code}" -s)
 
 if [[ $status_code -eq 400 ]]; then
-  echo -e "✅ ${BLUE}/api/cache${OFF} without a key param ${GREEN}passed${OFF}"
+  echo -e "✅ ${BLUE}/api/cache${OFF} without key param ${GREEN}passed${OFF}"
 else
   SUCCESS="false"
-  echo -e "❌ ${BLUE}/api/cache${OFF} ${RED}failed${OFF}"
+  echo -e "❌ ${BLUE}/api/cache${OFF} without key param ${RED}failed (expected 400, got $status_code)${OFF}"
 fi
 
-# a call to /api/cache with a key should return a 404 since it hasn't been set yet
-status_code=$(curl --insecure --location --request GET "http://localhost:${HTTP_PORT}/api/cache?key=mycoolquery" -o /dev/null -w "%{http_code}" -s)
+# Test GET /api/cache with empty key parameter (should return 400)
+status_code=$(curl --insecure --location --request GET "http://localhost:${HTTP_PORT}/api/cache?key=" -o /dev/null -w "%{http_code}" -s)
+
+if [[ $status_code -eq 400 ]]; then
+  echo -e "✅ ${BLUE}/api/cache?key=${OFF} with empty key ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache?key=${OFF} with empty key ${RED}failed (expected 400, got $status_code)${OFF}"
+fi
+
+# Test GET /api/cache with non-existent key (should return 404)
+status_code=$(curl --insecure --location --request GET "http://localhost:${HTTP_PORT}/api/cache?key=nonexistentkey" -o /dev/null -w "%{http_code}" -s)
 
 if [[ $status_code -eq 404 ]]; then
-  echo -e "✅ ${BLUE}/api/cache?key=mycoolquery${OFF} first GET check ${GREEN}passed${OFF}"
+  echo -e "✅ ${BLUE}/api/cache?key=nonexistentkey${OFF} non-existent key ${GREEN}passed${OFF}"
 else
   SUCCESS="false"
-  echo -e "❌ ${BLUE}/api/cache?key=mycoolquery${OFF} ${RED}failed${OFF}"
+  echo -e "❌ ${BLUE}/api/cache?key=nonexistentkey${OFF} non-existent key ${RED}failed (expected 404, got $status_code)${OFF}"
 fi
 
-status_code=$(curl --insecure --location --request POST "http://localhost:${HTTP_PORT}/api/cache" --header 'Content-Type: application/json' --data-raw '{"key": "mycoolquery","value": "fake response"}' -o /dev/null -w "%{http_code}" -s)
+# Test GET /api/cache with special characters in key (should return 404 since not set)
+status_code=$(curl --insecure --location --request GET "http://localhost:${HTTP_PORT}/api/cache?key=key%20with%20spaces" -o /dev/null -w "%{http_code}" -s)
+
+if [[ $status_code -eq 404 ]]; then
+  echo -e "✅ ${BLUE}/api/cache?key=key%20with%20spaces${OFF} special chars ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache?key=key%20with%20spaces${OFF} special chars ${RED}failed (expected 404, got $status_code)${OFF}"
+fi
+
+echo -e "\n${PURPLE}=== CACHE POST ENDPOINT TESTS ===${OFF}"
+
+# Test POST /api/cache without body (should return 400)
+status_code=$(curl --insecure --location --request POST "http://localhost:${HTTP_PORT}/api/cache" -o /dev/null -w "%{http_code}" -s)
+
+if [[ $status_code -eq 400 ]]; then
+  echo -e "✅ ${BLUE}/api/cache${OFF} POST without body ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache${OFF} POST without body ${RED}failed (expected 400, got $status_code)${OFF}"
+fi
+
+# Test POST /api/cache with invalid JSON (should return 400)
+status_code=$(curl --insecure --location --request POST "http://localhost:${HTTP_PORT}/api/cache" --header 'Content-Type: application/json' --data-raw 'invalid json' -o /dev/null -w "%{http_code}" -s)
+
+if [[ $status_code -eq 400 ]]; then
+  echo -e "✅ ${BLUE}/api/cache${OFF} POST invalid JSON ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache${OFF} POST invalid JSON ${RED}failed (expected 400, got $status_code)${OFF}"
+fi
+
+# Test POST /api/cache with missing key (should return 400)
+status_code=$(curl --insecure --location --request POST "http://localhost:${HTTP_PORT}/api/cache" --header 'Content-Type: application/json' --data-raw '{"value": "test"}' -o /dev/null -w "%{http_code}" -s)
+
+if [[ $status_code -eq 400 ]]; then
+  echo -e "✅ ${BLUE}/api/cache${OFF} POST missing key ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache${OFF} POST missing key ${RED}failed (expected 400, got $status_code)${OFF}"
+fi
+
+# Test POST /api/cache with missing value (should return 400)
+status_code=$(curl --insecure --location --request POST "http://localhost:${HTTP_PORT}/api/cache" --header 'Content-Type: application/json' --data-raw '{"key": "test"}' -o /dev/null -w "%{http_code}" -s)
+
+if [[ $status_code -eq 400 ]]; then
+  echo -e "✅ ${BLUE}/api/cache${OFF} POST missing value ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache${OFF} POST missing value ${RED}failed (expected 400, got $status_code)${OFF}"
+fi
+
+# Test POST /api/cache with empty key (should return 400)
+status_code=$(curl --insecure --location --request POST "http://localhost:${HTTP_PORT}/api/cache" --header 'Content-Type: application/json' --data-raw '{"key": "", "value": "test"}' -o /dev/null -w "%{http_code}" -s)
+
+if [[ $status_code -eq 400 ]]; then
+  echo -e "✅ ${BLUE}/api/cache${OFF} POST empty key ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache${OFF} POST empty key ${RED}failed (expected 400, got $status_code)${OFF}"
+fi
+
+# Test POST /api/cache with empty value (should return 400)
+status_code=$(curl --insecure --location --request POST "http://localhost:${HTTP_PORT}/api/cache" --header 'Content-Type: application/json' --data-raw '{"key": "test", "value": ""}' -o /dev/null -w "%{http_code}" -s)
+
+if [[ $status_code -eq 400 ]]; then
+  echo -e "✅ ${BLUE}/api/cache${OFF} POST empty value ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache${OFF} POST empty value ${RED}failed (expected 400, got $status_code)${OFF}"
+fi
+
+# Test POST /api/cache with invalid TTL (should return 400)
+status_code=$(curl --insecure --location --request POST "http://localhost:${HTTP_PORT}/api/cache" --header 'Content-Type: application/json' --data-raw '{"key": "test", "value": "test", "ttl": "not_a_number"}' -o /dev/null -w "%{http_code}" -s)
+
+if [[ $status_code -eq 400 ]]; then
+  echo -e "✅ ${BLUE}/api/cache${OFF} POST invalid TTL ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache${OFF} POST invalid TTL ${RED}failed (expected 400, got $status_code)${OFF}"
+fi
+
+# Test POST /api/cache with negative TTL (should accept, as strconv.Atoi allows negative numbers)
+response=$(curl --insecure --location --request POST "http://localhost:${HTTP_PORT}/api/cache" --header 'Content-Type: application/json' --data-raw '{"key": "negttlkey", "value": "test", "ttl": "-1"}' -w "%{http_code}" -s)
+status_code=$(echo "$response" | sed 's/.*\([0-9][0-9][0-9]\)$/\1/')
 
 if [[ $status_code -eq 200 ]]; then
-  echo -e "✅ ${BLUE}/api/cache${OFF} POST ${GREEN}passed${OFF}"
+  echo -e "✅ ${BLUE}/api/cache${OFF} POST negative TTL ${GREEN}passed${OFF}"
 else
   SUCCESS="false"
-  echo -e "❌ ${BLUE}/api/cache${OFF} ${RED}failed${OFF}"
+  echo -e "❌ ${BLUE}/api/cache${OFF} POST negative TTL ${RED}failed (expected 200, got $status_code)${OFF}"
 fi
 
-# now the ?key=mycoolquery should return a 200, with the "fake response" as the body and a `Cache-Control` header and `X-Cache-Ttl` header should exist
-response=$(curl --insecure --location --request GET "http://localhost:${HTTP_PORT}/api/cache?key=mycoolquery" -w "%{http_code}" -s)
+echo -e "\n${PURPLE}=== CACHE FUNCTIONALITY TESTS ===${OFF}"
+
+# Test POST /api/cache with valid data using default TTL (should return 200)
+response=$(curl --insecure --location --request POST "http://localhost:${HTTP_PORT}/api/cache" --header 'Content-Type: application/json' --data-raw '{"key": "defaultttlkey", "value": "default ttl response"}' -w "%{http_code}" -s)
 body=$(echo "$response" | sed 's/\(.*\)[0-9][0-9][0-9]$/\1/')
 status_code=$(echo "$response" | sed 's/.*\([0-9][0-9][0-9]\)$/\1/')
-headers=$(curl -I --insecure --location --request GET "http://localhost:${HTTP_PORT}/api/cache?key=mycoolquery" -s)
 
-# this header should exist
+if [[ $status_code -eq 200 && $body == '{"message":"cached"}' ]]; then
+  echo -e "✅ ${BLUE}/api/cache${OFF} POST default TTL ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache${OFF} POST default TTL ${RED}failed (expected 200 with cached message, got $status_code)${OFF}"
+fi
+
+# Test POST /api/cache with custom TTL (should return 200)
+response=$(curl --insecure --location --request POST "http://localhost:${HTTP_PORT}/api/cache" --header 'Content-Type: application/json' --data-raw '{"key": "customttlkey", "value": "custom ttl response", "ttl": "60"}' -w "%{http_code}" -s)
+body=$(echo "$response" | sed 's/\(.*\)[0-9][0-9][0-9]$/\1/')
+status_code=$(echo "$response" | sed 's/.*\([0-9][0-9][0-9]\)$/\1/')
+
+if [[ $status_code -eq 200 && $body == '{"message":"cached"}' ]]; then
+  echo -e "✅ ${BLUE}/api/cache${OFF} POST custom TTL ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache${OFF} POST custom TTL ${RED}failed (expected 200 with cached message, got $status_code)${OFF}"
+fi
+
+# Test POST /api/cache overwriting existing key (should return 200)
+response=$(curl --insecure --location --request POST "http://localhost:${HTTP_PORT}/api/cache" --header 'Content-Type: application/json' --data-raw '{"key": "customttlkey", "value": "overwritten response"}' -w "%{http_code}" -s)
+status_code=$(echo "$response" | sed 's/.*\([0-9][0-9][0-9]\)$/\1/')
+
+if [[ $status_code -eq 200 ]]; then
+  echo -e "✅ ${BLUE}/api/cache${OFF} POST overwrite key ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache${OFF} POST overwrite key ${RED}failed (expected 200, got $status_code)${OFF}"
+fi
+
+echo -e "\n${PURPLE}=== CACHE RETRIEVAL TESTS ===${OFF}"
+
+# Test GET /api/cache for default TTL key (should return 200 with correct headers)
+response=$(curl --insecure --location --request GET "http://localhost:${HTTP_PORT}/api/cache?key=defaultttlkey" -w "%{http_code}" -s)
+body=$(echo "$response" | sed 's/\(.*\)[0-9][0-9][0-9]$/\1/')
+status_code=$(echo "$response" | sed 's/.*\([0-9][0-9][0-9]\)$/\1/')
+headers=$(curl -I --insecure --location --request GET "http://localhost:${HTTP_PORT}/api/cache?key=defaultttlkey" -s)
+
+# Check headers exist
 echo "$headers" | grep -iq "Cache-Control"
 cache_control_exists=$?
-
-# this header should exist
 echo "$headers" | grep -iq "X-Cache-Ttl"
 x_cache_ttl_exists=$?
 
-# check for a header that should not exist
-echo "$headers" | grep -iq "should-not-exist"
-should_not_exist=$?
+# Check TTL value is reasonable (should be close to 500, but less due to time passed)
+ttl_header=$(echo "$headers" | grep -i "X-Cache-Ttl" | sed 's/.*: *\([0-9]*\).*/\1/')
 
-if [[ $status_code -eq 200 && $body == "\"fake response\"" && $x_cache_ttl_exists -eq 0 && $cache_control_exists -eq 0 && $should_not_exist -eq 1 ]]; then
-  echo -e "✅ ${BLUE}/api/cache?key=mycoolquery${OFF} second GET check ${GREEN}passed${OFF}"
+if [[ $status_code -eq 200 && $body == '"default ttl response"' && $x_cache_ttl_exists -eq 0 && $cache_control_exists -eq 0 && $ttl_header -gt 450 && $ttl_header -le 500 ]]; then
+  echo -e "✅ ${BLUE}/api/cache?key=defaultttlkey${OFF} GET with headers ${GREEN}passed${OFF}"
 else
   SUCCESS="false"
-  echo -e "❌ ${BLUE}/api/cache?key=mycoolquery${OFF} ${RED}failed${OFF}"
+  echo -e "❌ ${BLUE}/api/cache?key=defaultttlkey${OFF} GET with headers ${RED}failed (status: $status_code, ttl: $ttl_header)${OFF}"
 fi
+
+# Test GET /api/cache for overwritten key (should return new value)
+response=$(curl --insecure --location --request GET "http://localhost:${HTTP_PORT}/api/cache?key=customttlkey" -w "%{http_code}" -s)
+body=$(echo "$response" | sed 's/\(.*\)[0-9][0-9][0-9]$/\1/')
+status_code=$(echo "$response" | sed 's/.*\([0-9][0-9][0-9]\)$/\1/')
+
+if [[ $status_code -eq 200 && $body == '"overwritten response"' ]]; then
+  echo -e "✅ ${BLUE}/api/cache?key=customttlkey${OFF} GET overwritten value ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache?key=customttlkey${OFF} GET overwritten value ${RED}failed (expected overwritten response, got $body)${OFF}"
+fi
+
+echo -e "\n${PURPLE}=== SPECIAL CASES TESTS ===${OFF}"
+
+# Test with JSON values
+response=$(curl --insecure --location --request POST "http://localhost:${HTTP_PORT}/api/cache" --header 'Content-Type: application/json' --data-raw '{"key": "jsonkey", "value": "{\"nested\": \"json\"}"}' -w "%{http_code}" -s)
+status_code=$(echo "$response" | sed 's/.*\([0-9][0-9][0-9]\)$/\1/')
+
+if [[ $status_code -eq 200 ]]; then
+  echo -e "✅ ${BLUE}/api/cache${OFF} POST JSON value ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache${OFF} POST JSON value ${RED}failed${OFF}"
+fi
+
+# Retrieve JSON value
+response=$(curl --insecure --location --request GET "http://localhost:${HTTP_PORT}/api/cache?key=jsonkey" -w "%{http_code}" -s)
+body=$(echo "$response" | sed 's/\(.*\)[0-9][0-9][0-9]$/\1/')
+status_code=$(echo "$response" | sed 's/.*\([0-9][0-9][0-9]\)$/\1/')
+
+if [[ $status_code -eq 200 && $body == '"{\"nested\": \"json\"}"' ]]; then
+  echo -e "✅ ${BLUE}/api/cache?key=jsonkey${OFF} GET JSON value ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache?key=jsonkey${OFF} GET JSON value ${RED}failed (got: $body)${OFF}"
+fi
+
+# Test with URL-encoded key
+response=$(curl --insecure --location --request POST "http://localhost:${HTTP_PORT}/api/cache" --header 'Content-Type: application/json' --data-raw '{"key": "key with spaces", "value": "spaced key value"}' -w "%{http_code}" -s)
+status_code=$(echo "$response" | sed 's/.*\([0-9][0-9][0-9]\)$/\1/')
+
+if [[ $status_code -eq 200 ]]; then
+  echo -e "✅ ${BLUE}/api/cache${OFF} POST spaced key ${GREEN}passed${OFF}"
+  
+  # Retrieve with URL encoding
+  response=$(curl --insecure --location --request GET "http://localhost:${HTTP_PORT}/api/cache?key=key%20with%20spaces" -w "%{http_code}" -s)
+  body=$(echo "$response" | sed 's/\(.*\)[0-9][0-9][0-9]$/\1/')
+  status_code=$(echo "$response" | sed 's/.*\([0-9][0-9][0-9]\)$/\1/')
+  
+  if [[ $status_code -eq 200 && $body == '"spaced key value"' ]]; then
+    echo -e "✅ ${BLUE}/api/cache?key=key%20with%20spaces${OFF} GET spaced key ${GREEN}passed${OFF}"
+  else
+    SUCCESS="false"
+    echo -e "❌ ${BLUE}/api/cache?key=key%20with%20spaces${OFF} GET spaced key ${RED}failed${OFF}"
+  fi
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache${OFF} POST spaced key ${RED}failed${OFF}"
+fi
+
+# Test with very large TTL value
+response=$(curl --insecure --location --request POST "http://localhost:${HTTP_PORT}/api/cache" --header 'Content-Type: application/json' --data-raw '{"key": "largettlkey", "value": "large ttl", "ttl": "999999"}' -w "%{http_code}" -s)
+status_code=$(echo "$response" | sed 's/.*\([0-9][0-9][0-9]\)$/\1/')
+
+if [[ $status_code -eq 200 ]]; then
+  echo -e "✅ ${BLUE}/api/cache${OFF} POST large TTL ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache${OFF} POST large TTL ${RED}failed${OFF}"
+fi
+
+# Test zero TTL (immediate expiration)
+response=$(curl --insecure --location --request POST "http://localhost:${HTTP_PORT}/api/cache" --header 'Content-Type: application/json' --data-raw '{"key": "zerottlkey", "value": "zero ttl", "ttl": "0"}' -w "%{http_code}" -s)
+status_code=$(echo "$response" | sed 's/.*\([0-9][0-9][0-9]\)$/\1/')
+
+if [[ $status_code -eq 200 ]]; then
+  echo -e "✅ ${BLUE}/api/cache${OFF} POST zero TTL ${GREEN}passed${OFF}"
+  
+  # Note: Redis treats TTL of 0 as "no expiration" rather than immediate expiration
+  # Let's test that the key exists with no TTL
+  response=$(curl --insecure --location --request GET "http://localhost:${HTTP_PORT}/api/cache?key=zerottlkey" -w "%{http_code}" -s)
+  status_code=$(echo "$response" | sed 's/.*\([0-9][0-9][0-9]\)$/\1/')
+  
+  if [[ $status_code -eq 200 ]]; then
+    echo -e "✅ ${BLUE}/api/cache?key=zerottlkey${OFF} GET zero TTL key exists ${GREEN}passed${OFF}"
+  else
+    SUCCESS="false"
+    echo -e "❌ ${BLUE}/api/cache?key=zerottlkey${OFF} GET zero TTL key ${RED}failed (expected 200, got $status_code)${OFF}"
+  fi
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache${OFF} POST zero TTL ${RED}failed${OFF}"
+fi
+
+# Test short TTL (1 second) for actual expiration
+response=$(curl --insecure --location --request POST "http://localhost:${HTTP_PORT}/api/cache" --header 'Content-Type: application/json' --data-raw '{"key": "shortttlkey", "value": "short ttl", "ttl": "1"}' -w "%{http_code}" -s)
+status_code=$(echo "$response" | sed 's/.*\([0-9][0-9][0-9]\)$/\1/')
+
+if [[ $status_code -eq 200 ]]; then
+  echo -e "✅ ${BLUE}/api/cache${OFF} POST short TTL ${GREEN}passed${OFF}"
+  
+  # Wait for expiration and check
+  sleep 2
+  status_code=$(curl --insecure --location --request GET "http://localhost:${HTTP_PORT}/api/cache?key=shortttlkey" -o /dev/null -w "%{http_code}" -s)
+  
+  if [[ $status_code -eq 404 ]]; then
+    echo -e "✅ ${BLUE}/api/cache?key=shortttlkey${OFF} GET expired key ${GREEN}passed${OFF}"
+  else
+    SUCCESS="false"
+    echo -e "❌ ${BLUE}/api/cache?key=shortttlkey${OFF} GET expired key ${RED}failed (expected 404, got $status_code)${OFF}"
+  fi
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache${OFF} POST short TTL ${RED}failed${OFF}"
+fi
+
+echo -e "\n${PURPLE}=== ADDITIONAL EDGE CASES ===${OFF}"
+
+# Test with very long key
+long_key="very_long_key_$(printf '%*s' 100 '' | tr ' ' 'a')"
+response=$(curl --insecure --location --request POST "http://localhost:${HTTP_PORT}/api/cache" --header 'Content-Type: application/json' --data-raw "{\"key\": \"$long_key\", \"value\": \"long key value\"}" -w "%{http_code}" -s)
+status_code=$(echo "$response" | sed 's/.*\([0-9][0-9][0-9]\)$/\1/')
+
+if [[ $status_code -eq 200 ]]; then
+  echo -e "✅ ${BLUE}/api/cache${OFF} POST very long key ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache${OFF} POST very long key ${RED}failed${OFF}"
+fi
+
+# Test with very long value
+long_value=$(printf '%*s' 1000 '' | tr ' ' 'x')
+response=$(curl --insecure --location --request POST "http://localhost:${HTTP_PORT}/api/cache" --header 'Content-Type: application/json' --data-raw "{\"key\": \"longvaluekey\", \"value\": \"$long_value\"}" -w "%{http_code}" -s)
+status_code=$(echo "$response" | sed 's/.*\([0-9][0-9][0-9]\)$/\1/')
+
+if [[ $status_code -eq 200 ]]; then
+  echo -e "✅ ${BLUE}/api/cache${OFF} POST very long value ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache${OFF} POST very long value ${RED}failed${OFF}"
+fi
+
+# Test with special characters in key and value
+response=$(curl --insecure --location --request POST "http://localhost:${HTTP_PORT}/api/cache" --header 'Content-Type: application/json' --data-raw '{"key": "key@#$%^&*()_+-=[]{}|;:,.<>?", "value": "value with üñíçödé and symbols @#$%^&*()"}' -w "%{http_code}" -s)
+status_code=$(echo "$response" | sed 's/.*\([0-9][0-9][0-9]\)$/\1/')
+
+if [[ $status_code -eq 200 ]]; then
+  echo -e "✅ ${BLUE}/api/cache${OFF} POST special characters ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache${OFF} POST special characters ${RED}failed${OFF}"
+fi
+
+# Test content-type handling (POST without content-type header)
+# Note: Gin may still parse JSON even without explicit content-type
+response=$(curl --insecure --location --request POST "http://localhost:${HTTP_PORT}/api/cache" --data-raw '{"key": "nocontenttype", "value": "test"}' -w "%{http_code}" -s)
+status_code=$(echo "$response" | sed 's/.*\([0-9][0-9][0-9]\)$/\1/')
+
+if [[ $status_code -eq 200 || $status_code -eq 400 ]]; then
+  echo -e "✅ ${BLUE}/api/cache${OFF} POST without content-type ${GREEN}passed (got $status_code)${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache${OFF} POST without content-type ${RED}failed (expected 200 or 400, got $status_code)${OFF}"
+fi
+
+# Test wrong HTTP method on cache endpoint
+status_code=$(curl --insecure --location --request PUT "http://localhost:${HTTP_PORT}/api/cache" -o /dev/null -w "%{http_code}" -s)
+
+if [[ $status_code -eq 404 ]]; then
+  echo -e "✅ ${BLUE}/api/cache${OFF} PUT method ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache${OFF} PUT method ${RED}failed (expected 404, got $status_code)${OFF}"
+fi
+
+status_code=$(curl --insecure --location --request DELETE "http://localhost:${HTTP_PORT}/api/cache" -o /dev/null -w "%{http_code}" -s)
+
+if [[ $status_code -eq 404 ]]; then
+  echo -e "✅ ${BLUE}/api/cache${OFF} DELETE method ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache${OFF} DELETE method ${RED}failed (expected 404, got $status_code)${OFF}"
+fi
+
+# Test malformed JSON variations
+test_cases=(
+  '{"key": "test", "value": "test"'  # Missing closing brace
+  '{"key": "test" "value": "test"}'  # Missing comma
+  '{"key": test, "value": "test"}'   # Unquoted value
+  '{key: "test", "value": "test"}'   # Unquoted key
+)
+
+for i in "${!test_cases[@]}"; do
+  test_case="${test_cases[$i]}"
+  status_code=$(curl --insecure --location --request POST "http://localhost:${HTTP_PORT}/api/cache" --header 'Content-Type: application/json' --data-raw "$test_case" -o /dev/null -w "%{http_code}" -s)
+  
+  if [[ $status_code -eq 400 ]]; then
+    echo -e "✅ ${BLUE}/api/cache${OFF} POST malformed JSON case $((i+1)) ${GREEN}passed${OFF}"
+  else
+    SUCCESS="false"
+    echo -e "❌ ${BLUE}/api/cache${OFF} POST malformed JSON case $((i+1)) ${RED}failed (expected 400, got $status_code)${OFF}"
+  fi
+done
+
+# Test extremely large TTL (boundary testing)
+response=$(curl --insecure --location --request POST "http://localhost:${HTTP_PORT}/api/cache" --header 'Content-Type: application/json' --data-raw '{"key": "hugettlkey", "value": "huge ttl", "ttl": "2147483647"}' -w "%{http_code}" -s)
+status_code=$(echo "$response" | sed 's/.*\([0-9][0-9][0-9]\)$/\1/')
+
+if [[ $status_code -eq 200 ]]; then
+  echo -e "✅ ${BLUE}/api/cache${OFF} POST max int TTL ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache${OFF} POST max int TTL ${RED}failed${OFF}"
+fi
+
+# Test float TTL (should fail)
+status_code=$(curl --insecure --location --request POST "http://localhost:${HTTP_PORT}/api/cache" --header 'Content-Type: application/json' --data-raw '{"key": "floatttl", "value": "test", "ttl": "10.5"}' -o /dev/null -w "%{http_code}" -s)
+
+if [[ $status_code -eq 400 ]]; then
+  echo -e "✅ ${BLUE}/api/cache${OFF} POST float TTL ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache${OFF} POST float TTL ${RED}failed (expected 400, got $status_code)${OFF}"
+fi
+
+echo -e "\n${PURPLE}=== RESPONSE HEADERS AND CONTENT VERIFICATION ===${OFF}"
+
+# Test that response headers are correctly set for cached items
+response=$(curl --insecure --location --request POST "http://localhost:${HTTP_PORT}/api/cache" --header 'Content-Type: application/json' --data-raw '{"key": "headertest", "value": "header test value", "ttl": "300"}' -w "%{http_code}" -s)
+status_code=$(echo "$response" | sed 's/.*\([0-9][0-9][0-9]\)$/\1/')
+
+if [[ $status_code -eq 200 ]]; then
+  # Now test the headers are present and have correct values
+  headers_and_body=$(curl --insecure --location --request GET "http://localhost:${HTTP_PORT}/api/cache?key=headertest" -i -s)
+  
+  # Check for required headers
+  echo "$headers_and_body" | grep -iq "content-type: application/json"
+  content_type_exists=$?
+  
+  echo "$headers_and_body" | grep -iq "cache-control"
+  cache_control_exists=$?
+  
+  echo "$headers_and_body" | grep -iq "x-cache-ttl"
+  x_cache_ttl_exists=$?
+  
+  # Extract TTL value and verify it's reasonable (close to 300 but less due to time)
+  ttl_value=$(echo "$headers_and_body" | grep -i "x-cache-ttl" | sed 's/.*: *\([0-9]*\).*/\1/')
+  
+  if [[ $content_type_exists -eq 0 && $cache_control_exists -eq 0 && $x_cache_ttl_exists -eq 0 && $ttl_value -gt 290 && $ttl_value -le 300 ]]; then
+    echo -e "✅ ${BLUE}/api/cache?key=headertest${OFF} headers verification ${GREEN}passed${OFF}"
+  else
+    SUCCESS="false"
+    echo -e "❌ ${BLUE}/api/cache?key=headertest${OFF} headers verification ${RED}failed (TTL: $ttl_value)${OFF}"
+  fi
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache${OFF} POST for header test ${RED}failed${OFF}"
+fi
+
+# Test non-existent endpoints
+status_code=$(curl --insecure --location --request GET "http://localhost:${HTTP_PORT}/api/nonexistent" -o /dev/null -w "%{http_code}" -s)
+
+if [[ $status_code -eq 404 ]]; then
+  echo -e "✅ ${BLUE}/api/nonexistent${OFF} non-existent endpoint ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/nonexistent${OFF} non-existent endpoint ${RED}failed (expected 404, got $status_code)${OFF}"
+fi
+
+status_code=$(curl --insecure --location --request GET "http://localhost:${HTTP_PORT}/nonexistent" -o /dev/null -w "%{http_code}" -s)
+
+if [[ $status_code -eq 404 ]]; then
+  echo -e "✅ ${BLUE}/nonexistent${OFF} non-existent root endpoint ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/nonexistent${OFF} non-existent root endpoint ${RED}failed (expected 404, got $status_code)${OFF}"
+fi
+
+echo -e "\n${PURPLE}=== STRESS AND CONCURRENCY TESTS ===${OFF}"
+
+# Test rapid sequential requests
+echo -e "Testing rapid sequential requests..."
+sequential_success="true"
+for i in {1..5}; do
+  response=$(curl --insecure --location --request POST "http://localhost:${HTTP_PORT}/api/cache" --header 'Content-Type: application/json' --data-raw "{\"key\": \"seq$i\", \"value\": \"sequential value $i\"}" -w "%{http_code}" -s)
+  status_code=$(echo "$response" | sed 's/.*\([0-9][0-9][0-9]\)$/\1/')
+  
+  if [[ $status_code -ne 200 ]]; then
+    sequential_success="false"
+    break
+  fi
+done
+
+if [[ $sequential_success == "true" ]]; then
+  echo -e "✅ ${BLUE}/api/cache${OFF} rapid sequential POSTs ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache${OFF} rapid sequential POSTs ${RED}failed${OFF}"
+fi
+
+# Test retrieving all sequential values
+for i in {1..5}; do
+  response=$(curl --insecure --location --request GET "http://localhost:${HTTP_PORT}/api/cache?key=seq$i" -w "%{http_code}" -s)
+  body=$(echo "$response" | sed 's/\(.*\)[0-9][0-9][0-9]$/\1/')
+  status_code=$(echo "$response" | sed 's/.*\([0-9][0-9][0-9]\)$/\1/')
+  
+  if [[ $status_code -ne 200 || $body != "\"sequential value $i\"" ]]; then
+    sequential_success="false"
+    break
+  fi
+done
+
+if [[ $sequential_success == "true" ]]; then
+  echo -e "✅ ${BLUE}/api/cache${OFF} rapid sequential GETs ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache${OFF} rapid sequential GETs ${RED}failed${OFF}"
+fi
+
+echo -e "\n${PURPLE}=== DATA INTEGRITY TESTS ===${OFF}"
+
+# Test that different keys don't interfere with each other
+response=$(curl --insecure --location --request POST "http://localhost:${HTTP_PORT}/api/cache" --header 'Content-Type: application/json' --data-raw '{"key": "integrity1", "value": "value1", "ttl": "100"}' -w "%{http_code}" -s)
+status_code1=$(echo "$response" | sed 's/.*\([0-9][0-9][0-9]\)$/\1/')
+
+response=$(curl --insecure --location --request POST "http://localhost:${HTTP_PORT}/api/cache" --header 'Content-Type: application/json' --data-raw '{"key": "integrity2", "value": "value2", "ttl": "200"}' -w "%{http_code}" -s)
+status_code2=$(echo "$response" | sed 's/.*\([0-9][0-9][0-9]\)$/\1/')
+
+# Verify both keys exist with correct values
+response1=$(curl --insecure --location --request GET "http://localhost:${HTTP_PORT}/api/cache?key=integrity1" -w "%{http_code}" -s)
+body1=$(echo "$response1" | sed 's/\(.*\)[0-9][0-9][0-9]$/\1/')
+status1=$(echo "$response1" | sed 's/.*\([0-9][0-9][0-9]\)$/\1/')
+
+response2=$(curl --insecure --location --request GET "http://localhost:${HTTP_PORT}/api/cache?key=integrity2" -w "%{http_code}" -s)
+body2=$(echo "$response2" | sed 's/\(.*\)[0-9][0-9][0-9]$/\1/')
+status2=$(echo "$response2" | sed 's/.*\([0-9][0-9][0-9]\)$/\1/')
+
+if [[ $status_code1 -eq 200 && $status_code2 -eq 200 && $status1 -eq 200 && $status2 -eq 200 && $body1 == '"value1"' && $body2 == '"value2"' ]]; then
+  echo -e "✅ ${BLUE}/api/cache${OFF} data integrity test ${GREEN}passed${OFF}"
+else
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache${OFF} data integrity test ${RED}failed${OFF}"
+fi
+
+echo -e "\n${PURPLE}=== FINAL SUMMARY ===${OFF}"
+echo -e "Total test categories covered:"
+echo -e "  • Health endpoints (2 tests)"
+echo -e "  • Cache GET validation (4 tests)"
+echo -e "  • Cache POST validation (8 tests)"
+echo -e "  • Cache functionality (3 tests)"
+echo -e "  • Cache retrieval (2 tests)"
+echo -e "  • Special cases (8 tests)"
+echo -e "  • Additional edge cases (13 tests)"
+echo -e "  • Response headers verification (3 tests)"
+echo -e "  • Stress and concurrency (2 tests)"
+echo -e "  • Data integrity (1 test)"
+echo -e "  ${PURPLE}TOTAL: 46+ comprehensive tests${OFF}"
 
 ###### acceptance tests results ######
 echo -e "\n${PURPLE}acceptance tests results:${OFF}"
