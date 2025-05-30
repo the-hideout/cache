@@ -4,9 +4,10 @@ WORKDIR /app
 
 COPY . .
 
-RUN go mod download
+RUN go mod vendor
+RUN go mod tidy
 RUN go mod verify
-RUN go build -o cache
+RUN go build -mod=vendor -o cache
 
 FROM golang:1.24.3-alpine
 
