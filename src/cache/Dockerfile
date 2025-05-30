@@ -4,8 +4,8 @@ WORKDIR /app
 
 COPY . .
 
-RUN go mod vendor
 RUN go mod tidy
+RUN go mod vendor
 RUN go mod verify
 RUN go build -mod=vendor -o cache
 
