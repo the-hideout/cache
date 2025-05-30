@@ -3,7 +3,6 @@ module github.com/the-hideout/cache
 go 1.24
 
 require (
-	github.com/getsentry/sentry-go v0.28.1
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-redis/redis/v9 v9.0.0-rc.2
 	github.com/stretchr/testify v1.9.0
