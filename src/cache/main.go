@@ -1,16 +1,17 @@
 package main
 
 import (
-	"fmt"
-	"log"
-	"net/http"
-	"time"
-
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"fmt"
+	"io"
+	"log"
+	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v9"
@@ -19,45 +20,169 @@ import (
 	sentrygin "github.com/getsentry/sentry-go/gin"
 )
 
-// A schema for storing items in the in-memory cache
-// key: The base64 encoded graphql query
-// value: The graphql response for the given query
+// CacheSetBody represents the request body for setting cache items
 type CacheSetBody struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
-	Ttl   string `json:"ttl"`
+	Key   string `json:"key" binding:"required"`
+	Value string `json:"value" binding:"required"`
+	TTL   string `json:"ttl"`
 }
 
-var ctx = context.Background()
+// Config represents the application configuration
+type Config struct {
+	RedisHost string  `json:"redis_host"`
+	RedisPort float64 `json:"redis_port"`
+	TTL       float64 `json:"ttl"`
+}
 
-func config() map[string]interface{} {
-	// Read config file
+// CacheService handles cache operations
+type CacheService struct {
+	client *redis.Client
+	config *Config
+	ctx    context.Context
+}
+
+// NewCacheService creates a new cache service instance
+func NewCacheService(config *Config) *CacheService {
+	rdb := redis.NewClient(&redis.Options{
+		Addr:         fmt.Sprintf("%s:%.0f", config.RedisHost, config.RedisPort),
+		Password:     "",
+		DB:           0,
+		PoolSize:     20,
+		ReadTimeout:  3 * time.Second,
+		WriteTimeout: 3 * time.Second,
+		DialTimeout:  5 * time.Second,
+	})
+
+	return &CacheService{
+		client: rdb,
+		config: config,
+		ctx:    context.Background(),
+	}
+}
+
+// loadConfig reads and parses the configuration file
+func loadConfig() (*Config, error) {
 	configFile, err := os.Open("config.json")
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("failed to open config file: %w", err)
 	}
 	defer configFile.Close()
 
-	// Read the config file into bytes
-	byteValue, _ := ioutil.ReadAll(configFile)
+	byteValue, err := io.ReadAll(configFile)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read config file: %w", err)
+	}
 
-	// Define the interface to unmarshal
-	var result map[string]interface{}
+	var config Config
+	if err := json.Unmarshal(byteValue, &config); err != nil {
+		return nil, fmt.Errorf("failed to parse config file: %w", err)
+	}
 
-	// Parse the bytes into the interface (unstructured data)
-	json.Unmarshal([]byte(byteValue), &result)
+	return &config, nil
+}
 
-	// Return the interface (dict) of values
-	return result
+// HealthCheck performs a comprehensive health check
+func (cs *CacheService) HealthCheck() error {
+	ctx, cancel := context.WithTimeout(cs.ctx, 2*time.Second)
+	defer cancel()
+
+	return cs.client.Ping(ctx).Err()
+}
+
+// GetCache retrieves an item from the cache
+func (cs *CacheService) GetCache(c *gin.Context) {
+	key := c.DefaultQuery("key", "")
+	if key == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "key query parameter is required"})
+		return
+	}
+
+	// Set Sentry context
+	if hub := sentry.GetHubFromContext(c.Request.Context()); hub != nil {
+		hub.ConfigureScope(func(scope *sentry.Scope) {
+			scope.SetTag("query.key", key)
+		})
+	}
+
+	val, err := cs.client.Get(cs.ctx, key).Result()
+	if err == redis.Nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "key not found"})
+		return
+	} else if err != nil {
+		log.Printf("Redis error: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	// Get TTL
+	itemTTL, err := cs.client.TTL(cs.ctx, key).Result()
+	if err != nil {
+		log.Printf("TTL error: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	// Set cache headers
+	c.Header("X-CACHE-TTL", fmt.Sprintf("%.0f", itemTTL.Seconds()))
+	c.Header("Cache-Control", fmt.Sprintf("public, max-age=%d", int(itemTTL.Seconds())))
+
+	c.JSON(http.StatusOK, val)
+}
+
+// SetCache adds an item to the cache
+func (cs *CacheService) SetCache(c *gin.Context) {
+	var requestBody CacheSetBody
+
+	if err := c.ShouldBindJSON(&requestBody); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body", "details": err.Error()})
+		return
+	}
+
+	// Set Sentry context
+	if hub := sentry.GetHubFromContext(c.Request.Context()); hub != nil {
+		hub.ConfigureScope(func(scope *sentry.Scope) {
+			scope.SetTag("query.key", requestBody.Key)
+		})
+	}
+
+	var ttl time.Duration
+	if requestBody.TTL == "" {
+		ttl = time.Duration(int(cs.config.TTL)) * time.Second
+	} else {
+		ttlInt, err := strconv.Atoi(requestBody.TTL)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "ttl must be a string representation of an integer"})
+			return
+		}
+		ttl = time.Duration(ttlInt) * time.Second
+	}
+
+	// Set Sentry TTL context
+	if hub := sentry.GetHubFromContext(c.Request.Context()); hub != nil {
+		hub.ConfigureScope(func(scope *sentry.Scope) {
+			scope.SetTag("query.ttl", ttl.String())
+		})
+	}
+
+	err := cs.client.Set(cs.ctx, requestBody.Key, requestBody.Value, ttl).Err()
+	if err != nil {
+		log.Printf("Redis set error: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "cached"})
+}
+
+// Close closes the Redis connection
+func (cs *CacheService) Close() error {
+	return cs.client.Close()
 }
 
 func main() {
-
+	// Initialize Sentry
 	err := sentry.Init(sentry.ClientOptions{
-		Dsn: "https://4b25273b58ccdf45a8d574fc0a26dbee@sentry.thaddeus.io/5",
-		// Set TracesSampleRate to 1.0 to capture 100%
-		// of transactions for performance monitoring.
-		// We recommend adjusting this value in production,
+		Dsn:              "https://4b25273b58ccdf45a8d574fc0a26dbee@sentry.thaddeus.io/5",
 		EnableTracing:    true,
 		TracesSampleRate: 1,
 		Debug:            true,
@@ -65,137 +190,77 @@ func main() {
 	if err != nil {
 		log.Fatalf("sentry.Init: %s", err)
 	}
+	defer sentry.Flush(2 * time.Second)
 
-	// Load the config file
-	config := config()
+	// Load configuration
+	config, err := loadConfig()
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+	}
 
-	// Create a new redis client
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%.0f", config["redis_host"], config["redis_port"]),
-		Password: "", // no password set
-		DB:       0,  // use default DB
-		PoolSize: 20, // use a pool size of 20
-	})
+	// Create cache service
+	cacheService := NewCacheService(config)
+	defer cacheService.Close()
 
-	// Create a new gin router
+	// Test Redis connection
+	if err := cacheService.HealthCheck(); err != nil {
+		log.Fatalf("Failed to connect to Redis: %v", err)
+	}
+
+	// Create Gin router
 	r := gin.Default()
-
-	// Use the sentry middleware
 	r.Use(sentrygin.New(sentrygin.Options{}))
 
-	// Health endpoint
+	// Health endpoints
 	r.GET("/health", func(c *gin.Context) {
+		if err := cacheService.HealthCheck(); err != nil {
+			c.String(http.StatusServiceUnavailable, "Redis connection failed")
+			return
+		}
 		c.String(http.StatusOK, "OK")
 	})
 
-	// API Health endpoint
 	r.GET("/api/health", func(c *gin.Context) {
+		if err := cacheService.HealthCheck(); err != nil {
+			c.String(http.StatusServiceUnavailable, "Redis connection failed")
+			return
+		}
 		c.String(http.StatusOK, "OK")
 	})
 
-	// Endpoint to fetch an item from the in-memory redis cache
-	// If the item is found, the value of the item is returned
-	// If the item is not found, a 404 error is returned
-	r.GET("/api/cache", func(c *gin.Context) {
-		// Get and validate the key query string parameter
-		key := c.DefaultQuery("key", "")
-		if key == "" {
-			c.String(http.StatusBadRequest, "key query parameter is required")
-			return
+	// Cache endpoints
+	r.GET("/api/cache", cacheService.GetCache)
+	r.POST("/api/cache", cacheService.SetCache)
+
+	// Create HTTP server with timeouts
+	srv := &http.Server{
+		Addr:         ":8080",
+		Handler:      r,
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 15 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
+
+	// Start server in a goroutine
+	go func() {
+		log.Println("Starting server on :8080")
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen: %s\n", err)
 		}
+	}()
 
-		sentry.ConfigureScope(func(scope *sentry.Scope) {
-			scope.SetTag("query.key", key)
-		})
+	// Wait for interrupt signal to gracefully shutdown the server
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("Shutting down server...")
 
-		// Check the cache for the key
-		val, err := rdb.Get(ctx, key).Result()
+	// Graceful shutdown with 5 second timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatal("Server forced to shutdown:", err)
+	}
 
-		// If the item is not found, return a 404 error
-		if err == redis.Nil {
-			c.String(http.StatusNotFound, "key not found")
-			return
-			// If something else went wrong, return a 500 error
-		} else if err != nil {
-			c.String(http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		// Get the items TTL in Redis
-		item_ttl, err := rdb.TTL(ctx, key).Result()
-		if err != nil {
-			c.String(http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		//Set the X-CACHE-TTL header for when the item expires
-		c.Header("X-CACHE-TTL", fmt.Sprintf("%.0f", item_ttl.Seconds()))
-
-		// Set a cache-control header to ensure the item is cached
-		c.Header("Cache-Control", fmt.Sprintf("public, max-age=%d", int(item_ttl.Seconds())))
-
-		// Return the value of the item from the cache
-		c.JSON(http.StatusOK, val)
-	})
-
-	// Endpoint to add an item to the in-memory redis cache
-	// If the item is successfully added, return a success message
-	r.POST("/api/cache", func(c *gin.Context) {
-		var requestBody CacheSetBody
-
-		// Parse and validate the request body
-		if err := c.BindJSON(&requestBody); err != nil {
-			c.String(http.StatusBadRequest, "payload is required")
-			return
-		}
-		if requestBody.Key == "" || requestBody.Value == "" {
-			c.String(http.StatusBadRequest, "key and value params are required in payload body")
-			return
-		}
-
-		sentry.ConfigureScope(func(scope *sentry.Scope) {
-			scope.SetTag("query.key", requestBody.Key)
-		})
-
-		// Create the ttl variable to store the TTL of the item
-		var ttl time.Duration
-
-		// Check if the TTL was provided in the request body
-		ttlString := requestBody.Ttl
-
-		if ttlString == "" {
-			// If the TTL was not provided, use the default TTL from the config file
-			// Fetch TTL from config file and convert it into a time.Duration in seconds
-			ttl = time.Duration(int(config["ttl"].(float64))) * time.Second
-		} else {
-			// If the TTL was provided, use it
-			// Convert the string representation of the TTL into an integer
-			ttlInt, err := strconv.Atoi(requestBody.Ttl)
-
-			// Throw an error if we can't convert the TTL into an integer
-			if err != nil {
-				c.String(http.StatusBadRequest, "ttl must be an string representation of an integer")
-				return
-			}
-
-			// Convert the TTL into a time.Duration in seconds
-			ttl = time.Duration(int(ttlInt)) * time.Second
-		}
-
-		sentry.ConfigureScope(func(scope *sentry.Scope) {
-			scope.SetTag("query.ttl", ttl.String())
-		})
-
-		// Add the item to the cache
-		err := rdb.Set(ctx, requestBody.Key, requestBody.Value, ttl).Err()
-		if err != nil {
-			c.String(http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		c.JSON(http.StatusOK, gin.H{"message": "cached"})
-	})
-
-	// Start the application on 0.0.0.0:8080
-	r.Run(":8080")
+	log.Println("Server exiting")
 }
