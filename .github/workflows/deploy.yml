@@ -43,5 +43,4 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          script_stop: true
           script: ~/cache/script/deploy -r "main" -d "/home/${{ secrets.SSH_USERNAME }}/cache"

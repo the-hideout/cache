@@ -13,7 +13,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
 # start the docker compose stack
 make run
 
-ITS_UP="Listening and serving HTTP"
+ITS_UP="Starting server on"
 HTTP_PORT="8080"
 
 # initialize counter
