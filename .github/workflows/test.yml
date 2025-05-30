@@ -20,5 +20,8 @@ jobs:
         with:
           go-version-file: 'src/cache/go.mod'
 
+      - name: bootstrap
+        run: script/bootstrap
+    
       - name: test
         run: script/test
