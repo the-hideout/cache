@@ -29,9 +29,9 @@ type CacheSetBody struct {
 
 // Config represents the application configuration
 type Config struct {
-	RedisHost string  `json:"redis_host"`
-	RedisPort float64 `json:"redis_port"`
-	TTL       float64 `json:"ttl"`
+	RedisHost string `json:"redis_host"`
+	RedisPort int    `json:"redis_port"`
+	TTL       int    `json:"ttl"`
 }
 
 // CacheService handles cache operations
@@ -44,7 +44,7 @@ type CacheService struct {
 // NewCacheService creates a new cache service instance
 func NewCacheService(config *Config) *CacheService {
 	rdb := redis.NewClient(&redis.Options{
-		Addr:         fmt.Sprintf("%s:%.0f", config.RedisHost, config.RedisPort),
+		Addr:         fmt.Sprintf("%s:%d", config.RedisHost, config.RedisPort),
 		Password:     "",
 		DB:           0,
 		PoolSize:     20,
@@ -147,7 +147,7 @@ func (cs *CacheService) SetCache(c *gin.Context) {
 
 	var ttl time.Duration
 	if requestBody.TTL == "" {
-		ttl = time.Duration(int(cs.config.TTL)) * time.Second
+		ttl = time.Duration(cs.config.TTL) * time.Second
 	} else {
 		ttlInt, err := strconv.Atoi(requestBody.TTL)
 		if err != nil {

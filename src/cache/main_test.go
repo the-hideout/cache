@@ -77,7 +77,7 @@ func (m *MockCacheService) SetCache(c *gin.Context) {
 
 	var ttl time.Duration
 	if requestBody.TTL == "" {
-		ttl = time.Duration(int(m.config.TTL)) * time.Second
+		ttl = time.Duration(m.config.TTL) * time.Second
 	} else {
 		ttlInt, err := strconv.Atoi(requestBody.TTL)
 		if err != nil {
@@ -158,8 +158,8 @@ func TestLoadConfig(t *testing.T) {
 
 	// Verify config values are loaded correctly
 	assert.Equal(t, "redis", config.RedisHost)
-	assert.Equal(t, float64(6379), config.RedisPort)
-	assert.Equal(t, float64(500), config.TTL)
+	assert.Equal(t, 6379, config.RedisPort)
+	assert.Equal(t, 500, config.TTL)
 }
 
 func TestHealthEndpoints(t *testing.T) {
@@ -239,7 +239,7 @@ func TestSetCache(t *testing.T) {
 
 		var ttl time.Duration
 		if requestBody.TTL == "" {
-			ttl = time.Duration(int(testConfig.TTL)) * time.Second
+			ttl = time.Duration(testConfig.TTL) * time.Second
 		} else {
 			ttlInt, err := strconv.Atoi(requestBody.TTL)
 			if err != nil {
