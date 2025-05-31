@@ -15,9 +15,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v9"
-
-	sentry "github.com/getsentry/sentry-go"
-	sentrygin "github.com/getsentry/sentry-go/gin"
 )
 
 // CacheSetBody represents the request body for setting cache items
@@ -97,13 +94,6 @@ func (cs *CacheService) GetCache(c *gin.Context) {
 		return
 	}
 
-	// Set Sentry context
-	if hub := sentry.GetHubFromContext(c.Request.Context()); hub != nil {
-		hub.ConfigureScope(func(scope *sentry.Scope) {
-			scope.SetTag("query.key", key)
-		})
-	}
-
 	val, err := cs.client.Get(cs.ctx, key).Result()
 	if err == redis.Nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "key not found"})
@@ -138,13 +128,6 @@ func (cs *CacheService) SetCache(c *gin.Context) {
 		return
 	}
 
-	// Set Sentry context
-	if hub := sentry.GetHubFromContext(c.Request.Context()); hub != nil {
-		hub.ConfigureScope(func(scope *sentry.Scope) {
-			scope.SetTag("query.key", requestBody.Key)
-		})
-	}
-
 	var ttl time.Duration
 	if requestBody.TTL == "" {
 		ttl = time.Duration(cs.config.TTL) * time.Second
@@ -155,13 +138,6 @@ func (cs *CacheService) SetCache(c *gin.Context) {
 			return
 		}
 		ttl = time.Duration(ttlInt) * time.Second
-	}
-
-	// Set Sentry TTL context
-	if hub := sentry.GetHubFromContext(c.Request.Context()); hub != nil {
-		hub.ConfigureScope(func(scope *sentry.Scope) {
-			scope.SetTag("query.ttl", ttl.String())
-		})
 	}
 
 	err := cs.client.Set(cs.ctx, requestBody.Key, requestBody.Value, ttl).Err()
@@ -180,18 +156,6 @@ func (cs *CacheService) Close() error {
 }
 
 func main() {
-	// Initialize Sentry
-	err := sentry.Init(sentry.ClientOptions{
-		Dsn:              "https://4b25273b58ccdf45a8d574fc0a26dbee@sentry.thaddeus.io/5",
-		EnableTracing:    true,
-		TracesSampleRate: 1,
-		Debug:            true,
-	})
-	if err != nil {
-		log.Fatalf("sentry.Init: %s", err)
-	}
-	defer sentry.Flush(2 * time.Second)
-
 	// Load configuration
 	config, err := loadConfig()
 	if err != nil {
@@ -209,7 +173,6 @@ func main() {
 
 	// Create Gin router
 	r := gin.Default()
-	r.Use(sentrygin.New(sentrygin.Options{}))
 
 	// Health endpoints
 	r.GET("/health", func(c *gin.Context) {
