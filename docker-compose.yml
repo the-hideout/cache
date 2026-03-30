@@ -3,7 +3,7 @@
 services:
   redis:
     container_name: redis
-    image: redis:alpine3.16
+    image: redis:alpine3.16@sha256:2700d5097763fda285c463f4eefc3d0730a2df2a9d48e66707b19d5a5e5f23d4
     restart: unless-stopped
     command:
       [
