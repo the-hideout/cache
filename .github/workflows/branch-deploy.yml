@@ -14,7 +14,9 @@ permissions:
 
 jobs:
   deploy:
-    environment: production-secrets
+    environment:
+      name: production
+      deployment: false
     if: # only run on pull request comments and very specific comment body string as defined in our branch-deploy settings
       ${{ github.event.issue.pull_request &&
       (contains(github.event.comment.body, '.deploy') ||
@@ -26,17 +28,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: github/branch-deploy@v10
+      - uses: github/branch-deploy@v11.1.2
         id: branch-deploy
         with:
-          admins: the-hideout/core-contributors
-          admins_pat: ${{ secrets.BRANCH_DEPLOY_ADMINS_PAT }}
+          admins: GrantBirki,Razzmatazzz
           environment_targets: production
           sticky_locks: "true"
 
       - name: checkout
         if: ${{ steps.branch-deploy.outputs.continue == 'true' }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ steps.branch-deploy.outputs.sha }}
 
