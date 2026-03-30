@@ -12,7 +12,7 @@ This service is used to cache all GraphQL responses from the main [Tarkov API](h
 
 This service exists to cache all response from the [Tarkov API](https://github.com/the-hideout/tarkov-api) for performance and to reduce load on our cloudflare workers. It is written in GoLang and is as simple as it needs to be.
 
-This service caches requests only for a short period of time in order to keep data fresh and response times low
+This service caches requests only for a short period of time in order to keep data fresh and response times low.
 
 ### How it Works 📚
 
