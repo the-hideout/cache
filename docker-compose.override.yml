@@ -4,10 +4,14 @@ services:
   cache:
     environment:
       GIN_MODE: debug
+    ports:
+      - 8080:8080
     networks:
       - cache
   
   redis:
+    ports:
+      - 6379:6379
     networks:
       - cache
 

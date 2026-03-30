@@ -5,6 +5,7 @@
 set -e
 
 BASE_BRANCH="main"
+DC_CMD="docker-compose"
 
 function usage() {
   echo -e "\t ============================== script/deploy usage =============================="
@@ -78,8 +79,24 @@ function checkout_ref() {
   fi
 }
 
+function ensure_ingress_network() {
+  if ! sudo docker network inspect ingress >/dev/null 2>&1; then
+    echo "[i] creating shared ingress docker network"
+    sudo docker network create ingress >/dev/null
+  fi
+}
+
 function main() {
   parse_args "$@"
+
+  if command -v docker-compose >/dev/null 2>&1; then
+    DC_CMD="docker-compose"
+  elif command -v docker >/dev/null 2>&1; then
+    DC_CMD="docker compose"
+  else
+    echo "ERROR: docker is not installed"
+    exit 1
+  fi
 
   # If a deployment dir is specified, enter it
   if [[ -n $dir ]]; then
@@ -100,16 +117,17 @@ function main() {
   fi
 
   echo "[i] checked out commit SHA to deploy: $(git rev-parse HEAD)"
+  ensure_ingress_network
 
   ############################
   # DEPLOYMENT LOGIC
   ############################
 
   echo "[-] Killing old docker processes"
-  docker compose -f docker-compose.yml -f docker-compose.production.yml down --remove-orphans -v -t 1
+  sudo -E bash -c "$DC_CMD -f docker-compose.yml -f docker-compose.production.yml down --remove-orphans -v -t 1"
 
   echo "[i] Building docker containers"
-  docker compose -f docker-compose.yml -f docker-compose.production.yml up --build -d
+  sudo -E bash -c "$DC_CMD -f docker-compose.yml -f docker-compose.production.yml up --build -d"
 
   echo "[+] Containers are now running!"
 }

@@ -4,8 +4,6 @@ services:
   redis:
     container_name: redis
     image: redis:alpine3.16
-    ports:
-      - 6379:6379
     restart: unless-stopped
     command:
       [
@@ -24,8 +22,6 @@ services:
     build:
       context: ./src/cache
       dockerfile: ./Dockerfile
-    ports:
-      - 8080:8080
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
       interval: 30s
