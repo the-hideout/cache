@@ -4,7 +4,7 @@
 [![config validation](https://github.com/the-hideout/cache/actions/workflows/config-validation.yml/badge.svg)](https://github.com/the-hideout/cache/actions/workflows/config-validation.yml)
 [![acceptance](https://github.com/the-hideout/cache/actions/workflows/acceptance.yml/badge.svg)](https://github.com/the-hideout/cache/actions/workflows/acceptance.yml)
 
-A caching service using [Caddy](https://caddyserver.com/) + [Gin](https://github.com/gin-gonic/gin) + [Redis](https://redis.io/) with docker-compose
+A caching service using [Gin](https://github.com/gin-gonic/gin) + [Redis](https://redis.io/) with docker-compose
 
 This service is used to cache all GraphQL responses from the main [Tarkov API](https://github.com/the-hideout/tarkov-api) in order to provide maximum performance ⚡
 
@@ -24,8 +24,8 @@ This service works by doing the following:
 
 Traffic flow:
 
-1. Request hits the reverse proxy (caddy)
-2. The request is routed to the backend caching service (FastAPI)
+1. Request hits the standalone ingress proxy on the VPS
+2. The request is routed to the backend cache service
 3. The request can either be a GET (retrieves from the cache) or a POST (saves to the cache)
 
 ## Usage 🔨
@@ -42,7 +42,7 @@ To use this repo do the following:
 3. Create a request to the cache endpoint to set an item in the cache:
 
     ```bash
-    curl --location --request POST 'http://localhost/api/cache' \
+    curl --location --request POST 'http://localhost:8080/api/cache' \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "key": "mycoolquery",
@@ -53,7 +53,7 @@ To use this repo do the following:
 4. Create a request to retrieve the item you just placed in the cache:
 
     ```bash
-    curl --location --request GET 'http://localhost/api/cache?key=mycoolquery' \
+    curl --location --request GET 'http://localhost:8080/api/cache?key=mycoolquery' \
     --header 'Content-Type: application/json' \
     --data-raw '{}'
     ```
@@ -62,25 +62,11 @@ To use this repo do the following:
 
 That's it!
 
-## TLS Certificate 🔐
+## Production Routing
 
-Caddy automatically provisions TLS certificates for you. In order to make use of this awesome feature, do the following:
+Production TLS and public routing for `cache.tarkov.dev` are handled by the standalone `the-hideout/ingress` repo on the shared Docker network named `ingress`.
 
-1. Ensure your server has ports `80` and `443` open
-1. Have a DNS record pointed to your server for the domain you wish to obtain a certificate for (e.g. `app.example.org` -> `<IP address>`)
-1. Export the env var for the domain you wish to use:
-
-    ```bash
-    export DOMAIN=app.example.org
-    ```
-
-1. Start the docker-compose stack:
-
-   ```bash
-   docker-compose up --build
-   ```
-
-1. Navigate to your domain and enjoy your easy TLS setup with Caddy! -> [https://app.example.org](https://app.example.orgg)
+This repo owns only the cache application and Redis stack.
 
 ## Extra Info 📚
 
@@ -88,18 +74,12 @@ Here is some extra info about the setup!
 
 ### Volumes 🛢️
 
-The docker-compose file creates three volumes:
+The production docker-compose file persists Redis data at:
 
-- `./data/caddy_data:/data`
-- `./data/caddy_config:/config`
 - `./data/redis:/data`
-
-The config volume is used to mount Caddy configuration and Redis data
-
-The data volume is used to store certificate information. This is really important so that you are not re-requesting TLS certs each time you start your container. Doing so can cause you to hit Let's Encrypt rate limits that will prevent you from provisioning certificates
 
 ### Environment Variables 📝
 
-If you run the stack without the `DOMAIN` variable set in your environment, the stack will default to using `localhost`. This is ideal for testing out the stack locally.
+Local development publishes the cache API on `localhost:8080` and Redis on `localhost:6379` through `docker-compose.override.yml`.
 
-If you set the `DOMAIN` variable, Caddy will attempt to provision a certificate for that domain. In order to do so, you will need DNS records pointed to that domain and you will need need traffic to access your server via port `80` and `443`
+In production, the cache service joins the shared external `ingress` Docker network and does not publish host ports.
