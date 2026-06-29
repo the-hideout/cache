@@ -2,8 +2,6 @@
 
 services:
   cache:
-    environment:
-      GIN_MODE: debug
     ports:
       - 8080:8080
     networks:

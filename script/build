@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+source script/env "$@"
+
+echo -e "${BLUE}Entering cache directory...${OFF}"
+cd "$CACHE_GO_DIR"
+
+echo -e "${BLUE}Building cache binary...${OFF}"
+CGO_ENABLED=0 go build -mod=vendor -trimpath -ldflags="-s -w" -o "$DIR/bin/cache" .
+
+echo -e "${GREEN}✅ Build complete: $DIR/bin/cache${OFF}"

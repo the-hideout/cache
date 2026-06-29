@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+source script/env "$@"
+
+echo -e "${BLUE}Checking Go formatting...${OFF}"
+cd "$CACHE_GO_DIR"
+unformatted="$(gofmt -l main.go main_test.go)"
+if [[ -n "$unformatted" ]]; then
+  echo -e "${RED}❌ Go files need formatting:${OFF}"
+  echo "$unformatted"
+  exit 1
+fi
+
+echo -e "${BLUE}Checking GitHub Actions pins...${OFF}"
+cd "$DIR"
+unpinned=0
+while IFS= read -r line; do
+  if [[ ! "$line" =~ @[0-9a-f]{40}([[:space:]]|$) ]]; then
+    echo "$line"
+    unpinned=1
+  fi
+done < <(grep -R -nE 'uses:[[:space:]]*[^ @]+@' .github/workflows || true)
+
+if [[ "$unpinned" -ne 0 ]]; then
+  echo -e "${RED}❌ Found GitHub Actions not pinned to full commit SHAs${OFF}"
+  exit 1
+fi
+
+echo -e "${BLUE}Checking Docker image pins...${OFF}"
+docker_unpinned=0
+while IFS= read -r dockerfile; do
+  while IFS=: read -r line_number line_text; do
+    from_ref="$(sed -E 's/^[[:space:]]*FROM[[:space:]]+([^[:space:]]+).*/\1/' <<< "$line_text")"
+    if [[ "$from_ref" == --platform=* ]]; then
+      from_ref="$(sed -E 's/^[[:space:]]*FROM[[:space:]]+[^[:space:]]+[[:space:]]+([^[:space:]]+).*/\1/' <<< "$line_text")"
+    fi
+    if [[ "$from_ref" == "scratch" ]]; then
+      continue
+    fi
+    if [[ ! "$from_ref" =~ @sha256:[0-9a-f]{64}$ ]]; then
+      echo "${dockerfile}:${line_number}: ${from_ref}"
+      docker_unpinned=1
+    fi
+  done < <(grep -nE '^[[:space:]]*FROM[[:space:]]+' "$dockerfile" || true)
+done < <(find . -name Dockerfile -type f -not -path './.git/*' -not -path './src/cache/vendor/*' | sort)
+
+while IFS= read -r compose_file; do
+  while IFS=: read -r line_number line_text; do
+    image_ref="$(printf '%s\n' "$line_text" | awk -F'image:[[:space:]]*' '{print $2}' | awk '{print $1}' | tr -d "\"'")"
+    if [[ ! "$image_ref" =~ @sha256:[0-9a-f]{64}$ ]]; then
+      echo "${compose_file}:${line_number}: ${image_ref}"
+      docker_unpinned=1
+    fi
+  done < <(grep -nE '^[[:space:]]*image:[[:space:]]*' "$compose_file" || true)
+done < <(find . -maxdepth 2 \( -name 'docker-compose*.yml' -o -name 'docker-compose*.yaml' -o -name 'compose*.yml' -o -name 'compose*.yaml' \) -type f -not -path './.git/*' | sort)
+
+if [[ "$docker_unpinned" -ne 0 ]]; then
+  echo -e "${RED}❌ Found Docker image references not pinned to full sha256 digests${OFF}"
+  exit 1
+fi
+
+echo -e "${GREEN}✅ Lint checks passed${OFF}"

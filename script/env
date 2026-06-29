@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+export OFF='\033[0m'
+export RED='\033[0;31m'
+export GREEN='\033[0;32m'
+export BLUE='\033[0;34m'
+export PURPLE='\033[0;35m'
+export YELLOW='\033[0;33m'
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
+export DIR
+
+export CACHE_GO_DIR="${DIR}/src/cache"
+export GOTOOLCHAIN="local"
+export GOPROXY="off"
+export GOSUMDB="off"
+export GOFLAGS="-mod=vendor"
+export GOCACHE="${DIR}/.cache/go-build"
+export GOMODCACHE="${DIR}/.cache/go-mod"
+
+GO_VERSION="$(cat "${CACHE_GO_DIR}/.go-version")"
+GO_BIN="${HOME}/.goenv/versions/${GO_VERSION}/bin"
+if [[ -x "${GO_BIN}/go" ]]; then
+  export PATH="${GO_BIN}:${PATH}"
+fi
+
+mkdir -p "$GOCACHE" "$GOMODCACHE" "$DIR/bin"

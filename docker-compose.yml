@@ -31,7 +31,7 @@ services:
       context: ./src/cache
       dockerfile: ./Dockerfile
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
+      test: [ "CMD", "/app/cache", "healthcheck" ]
       interval: 30s
       timeout: 5s
       retries: 3

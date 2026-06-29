@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -13,53 +14,129 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v9"
 )
 
-// CacheSetBody represents the request body for setting cache items
-type CacheSetBody struct {
-	Key   string `json:"key" binding:"required"`
-	Value string `json:"value" binding:"required"`
+const (
+	configPath         = "config.json"
+	readOpTimeout      = 4 * time.Second
+	writeOpTimeout     = 10 * time.Second
+	healthCheckTimeout = 2 * time.Second
+	maxTTLSeconds      = int64(1<<63-1) / int64(time.Second)
+)
+
+var errCacheMiss = errors.New("cache miss")
+
+type cacheSetBody struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
 	TTL   string `json:"ttl"`
 }
 
-// Config represents the application configuration
 type Config struct {
 	RedisHost string `json:"redis_host"`
 	RedisPort int    `json:"redis_port"`
 	TTL       int    `json:"ttl"`
 }
 
-// CacheService handles cache operations
-type CacheService struct {
-	client *redis.Client
-	config *Config
-	ctx    context.Context
+type CacheItem struct {
+	Value string
+	TTL   time.Duration
 }
 
-// NewCacheService creates a new cache service instance
-func NewCacheService(config *Config) *CacheService {
-	rdb := redis.NewClient(&redis.Options{
-		Addr:         fmt.Sprintf("%s:%d", config.RedisHost, config.RedisPort),
-		Password:     "",
-		DB:           0,
-		PoolSize:     20,
-		ReadTimeout:  3 * time.Second,
-		WriteTimeout: 3 * time.Second,
-		DialTimeout:  5 * time.Second,
-	})
+type CacheStore interface {
+	Ping(context.Context) error
+	Get(context.Context, string) (CacheItem, error)
+	Set(context.Context, string, string, time.Duration) error
+	Close() error
+}
 
-	return &CacheService{
-		client: rdb,
-		config: config,
-		ctx:    context.Background(),
+type RedisStore struct {
+	client *redis.Client
+}
+
+func NewRedisStore(config *Config) *RedisStore {
+	return &RedisStore{
+		client: redis.NewClient(&redis.Options{
+			Addr:         fmt.Sprintf("%s:%d", config.RedisHost, config.RedisPort),
+			Password:     "",
+			DB:           0,
+			PoolSize:     20,
+			ReadTimeout:  3 * time.Second,
+			WriteTimeout: 3 * time.Second,
+			DialTimeout:  5 * time.Second,
+		}),
 	}
 }
 
-// loadConfig reads and parses the configuration file
+func (rs *RedisStore) Ping(ctx context.Context) error {
+	return rs.client.Ping(ctx).Err()
+}
+
+func (rs *RedisStore) Get(ctx context.Context, key string) (CacheItem, error) {
+	pipe := rs.client.Pipeline()
+	getCmd := pipe.Get(ctx, key)
+	ttlCmd := pipe.TTL(ctx, key)
+
+	if _, err := pipe.Exec(ctx); err != nil && !errors.Is(err, redis.Nil) {
+		return CacheItem{}, err
+	}
+
+	value, err := getCmd.Result()
+	if errors.Is(err, redis.Nil) {
+		return CacheItem{}, errCacheMiss
+	}
+	if err != nil {
+		return CacheItem{}, err
+	}
+
+	ttl, err := ttlCmd.Result()
+	if err != nil {
+		return CacheItem{}, err
+	}
+	if ttl <= 0 {
+		return CacheItem{}, errCacheMiss
+	}
+
+	return CacheItem{Value: value, TTL: ttl}, nil
+}
+
+func (rs *RedisStore) Set(ctx context.Context, key, value string, ttl time.Duration) error {
+	if ttl <= 0 {
+		return fmt.Errorf("ttl must be greater than zero")
+	}
+	return rs.client.Set(ctx, key, value, ttl).Err()
+}
+
+func (rs *RedisStore) Close() error {
+	return rs.client.Close()
+}
+
+type CacheService struct {
+	config *Config
+	store  CacheStore
+}
+
+func NewCacheService(config *Config) *CacheService {
+	return &CacheService{
+		config: config,
+		store:  NewRedisStore(config),
+	}
+}
+
+func newCacheService(config *Config, store CacheStore) *CacheService {
+	return &CacheService{
+		config: config,
+		store:  store,
+	}
+}
+
 func loadConfig() (*Config, error) {
-	configFile, err := os.Open("config.json")
+	return loadConfigFile(configPath)
+}
+
+func loadConfigFile(path string) (*Config, error) {
+	configFile, err := os.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open config file: %w", err)
 	}
@@ -78,147 +155,221 @@ func loadConfig() (*Config, error) {
 	return &config, nil
 }
 
-// HealthCheck performs a comprehensive health check
-func (cs *CacheService) HealthCheck() error {
-	ctx, cancel := context.WithTimeout(cs.ctx, 2*time.Second)
+func (cs *CacheService) HealthCheck(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, healthCheckTimeout)
 	defer cancel()
 
-	return cs.client.Ping(ctx).Err()
+	return cs.store.Ping(ctx)
 }
 
-// GetCache retrieves an item from the cache
-func (cs *CacheService) GetCache(c *gin.Context) {
-	key := c.DefaultQuery("key", "")
+func (cs *CacheService) GetCache(w http.ResponseWriter, r *http.Request) {
+	key := r.URL.Query().Get("key")
 	if key == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "key query parameter is required"})
+		writeCacheError(w, http.StatusBadRequest, map[string]string{"error": "key query parameter is required"})
 		return
 	}
 
-	val, err := cs.client.Get(cs.ctx, key).Result()
-	if err == redis.Nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "key not found"})
+	ctx, cancel := context.WithTimeout(r.Context(), readOpTimeout)
+	defer cancel()
+
+	item, err := cs.store.Get(ctx, key)
+	if errors.Is(err, errCacheMiss) {
+		writeCacheError(w, http.StatusNotFound, map[string]string{"error": "key not found"})
 		return
-	} else if err != nil {
+	}
+	if err != nil {
 		log.Printf("Redis error: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		writeCacheError(w, http.StatusInternalServerError, map[string]string{"error": "internal server error"})
+		return
+	}
+	if item.TTL <= 0 {
+		writeCacheError(w, http.StatusNotFound, map[string]string{"error": "key not found"})
 		return
 	}
 
-	// Get TTL
-	itemTTL, err := cs.client.TTL(cs.ctx, key).Result()
-	if err != nil {
-		log.Printf("TTL error: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
-		return
-	}
-
-	// Set cache headers
-	c.Header("X-CACHE-TTL", fmt.Sprintf("%.0f", itemTTL.Seconds()))
-	c.Header("Cache-Control", fmt.Sprintf("public, max-age=%d", int(itemTTL.Seconds())))
-
-	c.JSON(http.StatusOK, val)
+	ttlSeconds := int(item.TTL.Seconds())
+	w.Header().Set("X-CACHE-TTL", strconv.Itoa(ttlSeconds))
+	w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d", ttlSeconds))
+	writeJSON(w, http.StatusOK, item.Value)
 }
 
-// SetCache adds an item to the cache
-func (cs *CacheService) SetCache(c *gin.Context) {
-	var requestBody CacheSetBody
-
-	if err := c.ShouldBindJSON(&requestBody); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body", "details": err.Error()})
+func (cs *CacheService) SetCache(w http.ResponseWriter, r *http.Request) {
+	var requestBody cacheSetBody
+	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
+		writeCacheError(w, http.StatusBadRequest, map[string]string{"error": "invalid request body", "details": err.Error()})
+		return
+	}
+	if requestBody.Key == "" || requestBody.Value == "" {
+		writeCacheError(w, http.StatusBadRequest, map[string]string{"error": "invalid request body", "details": "key and value are required"})
 		return
 	}
 
-	var ttl time.Duration
-	if requestBody.TTL == "" {
-		ttl = time.Duration(cs.config.TTL) * time.Second
-	} else {
-		ttlInt, err := strconv.Atoi(requestBody.TTL)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "ttl must be a string representation of an integer"})
-			return
-		}
-		ttl = time.Duration(ttlInt) * time.Second
+	ttl, err := cs.cacheTTL(requestBody.TTL)
+	if err != nil {
+		writeCacheError(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return
 	}
 
-	err := cs.client.Set(cs.ctx, requestBody.Key, requestBody.Value, ttl).Err()
-	if err != nil {
+	ctx, cancel := context.WithTimeout(r.Context(), writeOpTimeout)
+	defer cancel()
+
+	if err := cs.store.Set(ctx, requestBody.Key, requestBody.Value, ttl); err != nil {
 		log.Printf("Redis set error: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		writeCacheError(w, http.StatusInternalServerError, map[string]string{"error": "internal server error"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "cached"})
+	writeJSON(w, http.StatusOK, map[string]string{"message": "cached"})
 }
 
-// Close closes the Redis connection
+func (cs *CacheService) cacheTTL(rawTTL string) (time.Duration, error) {
+	if rawTTL == "" {
+		if cs.config.TTL <= 0 {
+			return 0, fmt.Errorf("ttl must be greater than zero")
+		}
+		if int64(cs.config.TTL) > maxTTLSeconds {
+			return 0, fmt.Errorf("ttl must not exceed %d seconds", maxTTLSeconds)
+		}
+		return time.Duration(cs.config.TTL) * time.Second, nil
+	}
+
+	ttlInt, err := strconv.ParseInt(rawTTL, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("ttl must be a string representation of an integer")
+	}
+	if ttlInt <= 0 {
+		return 0, fmt.Errorf("ttl must be greater than zero")
+	}
+	if ttlInt > maxTTLSeconds {
+		return 0, fmt.Errorf("ttl must not exceed %d seconds", maxTTLSeconds)
+	}
+
+	return time.Duration(ttlInt) * time.Second, nil
+}
+
 func (cs *CacheService) Close() error {
-	return cs.client.Close()
+	return cs.store.Close()
+}
+
+func newRouter(cacheService *CacheService) http.Handler {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/health", cacheService.healthHandler)
+	mux.HandleFunc("/api/health", cacheService.healthHandler)
+	mux.HandleFunc("/api/cache", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet, http.MethodHead:
+			cacheService.GetCache(w, r)
+		case http.MethodPost:
+			cacheService.SetCache(w, r)
+		default:
+			writeNoStore(w)
+			http.NotFound(w, r)
+		}
+	})
+	return mux
+}
+
+func (cs *CacheService) healthHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		writeNoStore(w)
+		http.NotFound(w, r)
+		return
+	}
+	if err := cs.HealthCheck(r.Context()); err != nil {
+		writeNoStore(w)
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.WriteHeader(http.StatusServiceUnavailable)
+		_, _ = w.Write([]byte("Redis connection failed"))
+		return
+	}
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte("OK"))
+}
+
+func writeCacheError(w http.ResponseWriter, status int, payload map[string]string) {
+	writeNoStore(w)
+	writeJSON(w, status, payload)
+}
+
+func writeNoStore(w http.ResponseWriter) {
+	w.Header().Set("Cache-Control", "no-store")
+}
+
+func writeJSON(w http.ResponseWriter, status int, payload interface{}) {
+	body, err := json.Marshal(payload)
+	if err != nil {
+		writeNoStore(w)
+		http.Error(w, `{"error":"internal server error"}`, http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(status)
+	_, _ = w.Write(body)
+}
+
+func runHealthcheck() int {
+	url := os.Getenv("CACHE_HEALTHCHECK_URL")
+	if url == "" {
+		url = "http://127.0.0.1:8080/health"
+	}
+
+	return runHealthcheckWithClient(&http.Client{Timeout: healthCheckTimeout}, url)
+}
+
+func runHealthcheckWithClient(client *http.Client, url string) int {
+	resp, err := client.Get(url)
+	if err != nil {
+		log.Printf("healthcheck request failed: %v", err)
+		return 1
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("healthcheck returned status %d", resp.StatusCode)
+		return 1
+	}
+	return 0
 }
 
 func main() {
-	// Load configuration
+	if len(os.Args) > 1 && os.Args[1] == "healthcheck" {
+		os.Exit(runHealthcheck())
+	}
+
 	config, err := loadConfig()
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	// Create cache service
 	cacheService := NewCacheService(config)
 	defer cacheService.Close()
 
-	// Test Redis connection
-	if err := cacheService.HealthCheck(); err != nil {
+	if err := cacheService.HealthCheck(context.Background()); err != nil {
 		log.Fatalf("Failed to connect to Redis: %v", err)
 	}
 
-	// Create Gin router
-	r := gin.Default()
-
-	// Health endpoints
-	r.GET("/health", func(c *gin.Context) {
-		if err := cacheService.HealthCheck(); err != nil {
-			c.String(http.StatusServiceUnavailable, "Redis connection failed")
-			return
-		}
-		c.String(http.StatusOK, "OK")
-	})
-
-	r.GET("/api/health", func(c *gin.Context) {
-		if err := cacheService.HealthCheck(); err != nil {
-			c.String(http.StatusServiceUnavailable, "Redis connection failed")
-			return
-		}
-		c.String(http.StatusOK, "OK")
-	})
-
-	// Cache endpoints
-	r.GET("/api/cache", cacheService.GetCache)
-	r.POST("/api/cache", cacheService.SetCache)
-
-	// Create HTTP server with timeouts
 	srv := &http.Server{
 		Addr:         ":8080",
-		Handler:      r,
+		Handler:      newRouter(cacheService),
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,
 	}
 
-	// Start server in a goroutine
 	go func() {
 		log.Println("Starting server on :8080")
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("listen: %s\n", err)
 		}
 	}()
 
-	// Wait for interrupt signal to gracefully shutdown the server
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 	log.Println("Shutting down server...")
 
-	// Graceful shutdown with 5 second timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
