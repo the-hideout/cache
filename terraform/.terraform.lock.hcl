@@ -2,23 +2,23 @@
 # Manual edits may be lost in future updates.
 
 provider "registry.terraform.io/hashicorp/azurerm" {
-  version     = "3.10.0"
-  constraints = "3.10.0"
+  version     = "4.73.0"
+  constraints = "4.73.0"
   hashes = [
-    "h1:3We9b8sM4m5kmGKc2wrQkoXoL9wsEEjZvAbpM87Dil8=",
-    "h1:pa+WRfGci/bQBLpuL/QOX91iu1vSf5gPsHmYzH/a+EE=",
-    "zh:01f749bc6f5fde7ef1dcdf741d32fe05cb3e6b3b550659981c7aaff6ee47a55e",
-    "zh:1d6525872c6cf2c2437b3dfff34b285fd00cb2b8d55d9b0686738887fbdae6ea",
-    "zh:3c1a9fa26d3e455275ddfc2b72e8173cdb83ae75500eb0e8dd6f080e26d1b177",
-    "zh:4473f70d638967157b61f2e56c672455418714c77a2974c98b0c4e19d28ed560",
-    "zh:567778e1d9df13925d54da963e9ca7aebada3bc444e78a87a79f17dc0aa8b23b",
-    "zh:6c3c9722b24d9f976ae0da02af15f9b7f734a835e82658af899cff8d928e9170",
-    "zh:6fde9333c15428439913dd62c440f127e6637904fa460282593fab384ae0469c",
-    "zh:8d44cc5f93359a30e3d3df9d9eca80056d34d2fff31e47e0883dbf181ed7151b",
-    "zh:8e3b9bb10c1241621ceeaf73db12256f8ff94d9fcc0bc26ac2936751c22e2f13",
-    "zh:a5c9386bb557d19cb5538f6273c76b1756e2f9e6a75d3bb8b0df04a09086a709",
-    "zh:a673c4fea86b5f2cd5602077e712abf08410d1ec10c1ae2d346a6f5bc3548419",
-    "zh:f569b65999264a9416862bca5cd2a6177d94ccb0424f3a4ef424428912b9cb3c",
+    "h1:DIjYg/qDXFi6Tmm4eWY8rbfynwc8PH5a93EjFcr3bcY=",
+    "h1:bOt0T0oW3ANoIVaSJ+zsHI8VCDEhic6x3jkyM2Bodrk=",
+    "zh:033cfb755fcb4b6d448c1f77aa815a8451ab81398f9b4408edd6fdcab45fdc4b",
+    "zh:1025fedc231d37eed6b53f09b26dc74487b08da0b0e9fd0410b282721b8fd4e4",
+    "zh:136f9d79a5dc08e9b9b190085e29d7d116d2a5c242d997d066f24f23bf4e4b8a",
+    "zh:39199a667a66c06f74cf175f36a52dab5362daefb4bd27fd9229f7c07a65f364",
+    "zh:4c4602b7af77a8d79b85f410f0f1d0399fe7df6dbb4a980799d84f8edb5df9c3",
+    "zh:717229a96a3a14939e577342550504da75637d405b6ee9b828891fdfa6221d85",
+    "zh:78d5eefdd9e494defcb3c68d282b8f96630502cac21d1ea161f53cfe9bb483b3",
+    "zh:7c95baea41fbb2c98c7c1bf90b919cdd2e2ab9f26a1f218106fe8462f900d957",
+    "zh:82fd02732a5f1969e6499e49b49801a5e43f6e8184f245ed5c7b0799c50e200f",
+    "zh:91aa41a45f87bd5f32a632f7f61f2a3f7d1b5445776263c62a21ed9389ac6d41",
+    "zh:b6444008270cdeaf80bc4f575d19f2fe14f802fb2ab550bdad9889e06a637bb9",
+    "zh:f5e89c877cf7d10360f7d4fa87a060c6f27cd2bf6acdb454b4f9d837c362040f",
   ]
 }
 
