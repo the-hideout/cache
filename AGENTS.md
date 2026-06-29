@@ -182,17 +182,25 @@ The Docker build sets `GOFLAGS=-mod=vendor`, `GOPROXY=off`, `GOSUMDB=off`, and `
 
 The runtime image is `scratch`.
 
+`scratch` does not include `/etc/passwd` or `/etc/group`. If you want human-readable users in a scratch image, create minimal passwd/group files in the builder stage, copy them into the runtime image, and then use `USER nonroot:nonroot`.
+
 The runtime binary is statically built with `CGO_ENABLED=0`.
 
-The runtime user is `65532:65532`.
+The runtime user should be the named `nonroot:nonroot` identity, backed by UID/GID `65532`. Prefer the named form in the Dockerfile because it is easier to read and review than raw numeric IDs.
 
 The Docker healthcheck runs `/app/cache healthcheck`; do not add `curl` back into the runtime image just for health checks.
 
 The old `GIN_MODE` compose environment variables were removed because Gin is no longer part of the service.
 
-The Redis image in `docker-compose.yml` is digest-pinned.
+Every Docker image reference in this project should be pinned to a full `sha256:` digest for reproducible builds.
 
-The Go builder image currently uses `golang:1.24.3-alpine`; deployment logs resolved it to a digest during the PR #86 deploy, but the Dockerfile itself still uses the tag. If you change image pinning, do it intentionally and verify Docker/CI behavior.
+The Go builder image is pinned as `golang:1.24.3-alpine@sha256:b4f875e650466fa0fe62c6fd3f02517a392123eea85f1d7e69d85f780e4db1c1`. This digest was verified with `docker buildx imagetools inspect golang:1.24.3-alpine`.
+
+The Redis image in `docker-compose.yml` is pinned as `redis:alpine3.16@sha256:2700d5097763fda285c463f4eefc3d0730a2df2a9d48e66707b19d5a5e5f23d4`. This digest was verified with `docker buildx imagetools inspect redis:alpine3.16`.
+
+`FROM scratch` is the special empty Docker base and is not pinned like a registry image. Treat it as acceptable without a digest because there is no upstream image manifest to fetch.
+
+If you update a Docker tag or digest, verify the manifest digest before editing, then run the Docker/compose checks that are available in the current environment.
 
 Production compose raises Redis memory to `2gb`, uses `allkeys-lru`, persists Redis data under `./data/redis:/data`, and attaches the cache service to both `cache` and external `ingress` networks.
 
