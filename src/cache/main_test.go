@@ -450,6 +450,12 @@ func TestSetCache(t *testing.T) {
 			expectedError:  "ttl must be greater than zero",
 		},
 		{
+			name:           "ttl overflow",
+			body:           `{"key":"test","value":"test","ttl":"` + strconv.FormatInt(maxTTLSeconds+1, 10) + `"}`,
+			expectedStatus: http.StatusBadRequest,
+			expectedError:  "ttl must not exceed " + strconv.FormatInt(maxTTLSeconds, 10) + " seconds",
+		},
+		{
 			name:           "numeric ttl",
 			body:           `{"key":"test","value":"test","ttl":30}`,
 			expectedStatus: http.StatusBadRequest,
@@ -520,6 +526,22 @@ func TestCacheTTLRejectsInvalidDefault(t *testing.T) {
 	service := newCacheService(&Config{TTL: 0}, newFakeStore())
 	if _, err := service.cacheTTL(""); err == nil {
 		t.Fatal("expected error for invalid default ttl")
+	}
+
+	service = newCacheService(&Config{TTL: int(maxTTLSeconds + 1)}, newFakeStore())
+	if _, err := service.cacheTTL(""); err == nil {
+		t.Fatal("expected error for overflowing default ttl")
+	}
+}
+
+func TestCacheTTLRejectsOverflow(t *testing.T) {
+	service := newCacheService(testConfig(), newFakeStore())
+	_, err := service.cacheTTL(strconv.FormatInt(maxTTLSeconds+1, 10))
+	if err == nil {
+		t.Fatal("expected error for overflowing ttl")
+	}
+	if !strings.Contains(err.Error(), "ttl must not exceed") {
+		t.Fatalf("overflow error = %q, want ttl must not exceed", err.Error())
 	}
 }
 
@@ -621,7 +643,7 @@ func BenchmarkGetCache(b *testing.B) {
 
 func FuzzCacheTTL(f *testing.F) {
 	service := newCacheService(testConfig(), newFakeStore())
-	for _, seed := range []string{"", "1", "0030", "0", "-1", "1e2", "10.5", "9223372036854775808"} {
+	for _, seed := range []string{"", "1", "0030", "0", "-1", "1e2", "10.5", "9223372037", "9223372036854775808"} {
 		f.Add(seed)
 	}
 
@@ -634,8 +656,8 @@ func FuzzCacheTTL(f *testing.F) {
 			return
 		}
 
-		parsed, parseErr := strconv.Atoi(raw)
-		if parseErr != nil || parsed <= 0 {
+		parsed, parseErr := strconv.ParseInt(raw, 10, 64)
+		if parseErr != nil || parsed <= 0 || parsed > maxTTLSeconds {
 			if err == nil {
 				t.Fatalf("cacheTTL(%q) succeeded for invalid input", raw)
 			}

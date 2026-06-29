@@ -22,6 +22,7 @@ const (
 	readOpTimeout      = 4 * time.Second
 	writeOpTimeout     = 10 * time.Second
 	healthCheckTimeout = 2 * time.Second
+	maxTTLSeconds      = int64(1<<63-1) / int64(time.Second)
 )
 
 var errCacheMiss = errors.New("cache miss")
@@ -226,15 +227,21 @@ func (cs *CacheService) cacheTTL(rawTTL string) (time.Duration, error) {
 		if cs.config.TTL <= 0 {
 			return 0, fmt.Errorf("ttl must be greater than zero")
 		}
+		if int64(cs.config.TTL) > maxTTLSeconds {
+			return 0, fmt.Errorf("ttl must not exceed %d seconds", maxTTLSeconds)
+		}
 		return time.Duration(cs.config.TTL) * time.Second, nil
 	}
 
-	ttlInt, err := strconv.Atoi(rawTTL)
+	ttlInt, err := strconv.ParseInt(rawTTL, 10, 64)
 	if err != nil {
 		return 0, fmt.Errorf("ttl must be a string representation of an integer")
 	}
 	if ttlInt <= 0 {
 		return 0, fmt.Errorf("ttl must be greater than zero")
+	}
+	if ttlInt > maxTTLSeconds {
+		return 0, fmt.Errorf("ttl must not exceed %d seconds", maxTTLSeconds)
 	}
 
 	return time.Duration(ttlInt) * time.Second, nil

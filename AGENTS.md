@@ -66,6 +66,8 @@ The `Cache-Control: no-store` behavior on misses and errors is intentional. It p
 
 Custom TTL values `<= 0` are rejected with `400`. This is an intentional bug fix from the old behavior, where Redis could treat zero as no expiration.
 
+Custom TTL values greater than `9223372036` seconds are rejected with `400`. This protects the `time.Duration` conversion from overflowing before the TTL reaches Redis.
+
 When `ttl` is absent, the default TTL from `config.json` is used. That default also must be greater than zero.
 
 `GET /api/cache?key=missing&key=existing` uses the first `key` query parameter, matching Go's `URL.Query().Get` behavior and the old observed API behavior.
@@ -170,7 +172,9 @@ Total statement coverage after the modernization work was about 73.6%. The main 
 
 Do not chase 100% coverage by making the code worse. Add coverage where it clarifies behavior or protects a meaningful edge case.
 
-The acceptance suite exercises real Docker/Redis behavior, including default TTL, custom TTL, overwrites, expiration, unicode/special keys, large values, concurrent reads/writes, cache headers, and invalid TTL behavior.
+The acceptance suite exercises real Docker/Redis behavior, including default TTL, custom TTL, overwrites, expiration, unicode/special keys and values, light concurrent reads/writes, cache headers, `no-store` on negative responses, and invalid TTL behavior.
+
+`script/acceptance` should be a deterministic assertion suite, not an exploratory probe script. Unexpected statuses, bodies, or headers should increment the failure count and cause a non-zero exit.
 
 Local Docker was not running during the modernization implementation on the developer machine, so the local Docker build was blocked by a missing socket at `/Users/birki/.docker/run/docker.sock`. CI acceptance and the branch deploy later proved the Docker build on the remote runner/host.
 
@@ -194,6 +198,8 @@ The old `GIN_MODE` compose environment variables were removed because Gin is no 
 
 Every Docker image reference in this project should be pinned to a full `sha256:` digest for reproducible builds.
 
+`script/lint` enforces Docker image digest pins in Dockerfiles and compose files. `FROM scratch` is the only accepted unpinned base because it is Docker's empty sentinel image rather than a registry image manifest.
+
 The Go builder image is pinned as `golang:1.24.3-alpine@sha256:b4f875e650466fa0fe62c6fd3f02517a392123eea85f1d7e69d85f780e4db1c1`. This digest was verified with `docker buildx imagetools inspect golang:1.24.3-alpine`.
 
 The Redis image in `docker-compose.yml` is pinned as `redis:alpine3.16@sha256:2700d5097763fda285c463f4eefc3d0730a2df2a9d48e66707b19d5a5e5f23d4`. This digest was verified with `docker buildx imagetools inspect redis:alpine3.16`.
@@ -210,7 +216,7 @@ Local compose publishes API port `8080` and Redis port `6379`.
 
 All GitHub Actions `uses:` references must be pinned to full-length commit SHAs.
 
-`script/lint` enforces full-SHA action pins.
+`script/lint` enforces full-SHA action pins and full Docker image digest pins.
 
 Checkout steps should use `persist-credentials: false` unless there is a specific need to keep credentials in the checkout.
 
