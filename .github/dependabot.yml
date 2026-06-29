@@ -11,3 +11,23 @@ updates:
           - "*"
     schedule:
       interval: monthly
+    cooldown:
+      default-days: 45
+  - package-ecosystem: "docker"
+    directory: "/src/cache"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 45
+  - package-ecosystem: "gomod"
+    directory: "/src/cache"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 45
+  - package-ecosystem: "terraform"
+    directory: "/terraform"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 45
