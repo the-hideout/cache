@@ -1,24 +1,29 @@
-FROM golang:1.24.3-alpine as builder
+FROM golang:1.24.3-alpine AS builder
 
 WORKDIR /app
 
 COPY . .
 
-RUN go mod tidy
-RUN go mod vendor
-RUN go mod verify
-RUN go build -mod=vendor -o cache
+ARG TARGETOS
+ARG TARGETARCH
+ENV CGO_ENABLED=0 \
+    GOFLAGS=-mod=vendor \
+    GOPROXY=off \
+    GOSUMDB=off \
+    GOTOOLCHAIN=local
 
-FROM golang:1.24.3-alpine
+RUN go list -deps ./... >/dev/null
+RUN GOOS="${TARGETOS:-linux}" GOARCH="${TARGETARCH:-$(go env GOARCH)}" go build -trimpath -ldflags="-s -w" -o /cache .
 
-RUN apk add curl
-
-RUN adduser -D nonroot
-USER nonroot
+FROM scratch
 
 WORKDIR /app
 
-COPY --from=builder /app/cache .
-COPY --chown=nonroot:nonroot config.json .
+COPY --from=builder /cache /app/cache
+COPY config.json /app/config.json
+
+USER 65532:65532
+EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 --start-period=15s CMD ["/app/cache", "healthcheck"]
 
 CMD ["./cache"]

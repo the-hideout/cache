@@ -1,6 +1,8 @@
 __pycache__
 creds.env
 *.pem
+.cache/
+bin/
 
 # container volume files
 data/*

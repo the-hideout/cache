@@ -4,7 +4,7 @@
 [![config validation](https://github.com/the-hideout/cache/actions/workflows/config-validation.yml/badge.svg)](https://github.com/the-hideout/cache/actions/workflows/config-validation.yml)
 [![acceptance](https://github.com/the-hideout/cache/actions/workflows/acceptance.yml/badge.svg)](https://github.com/the-hideout/cache/actions/workflows/acceptance.yml)
 
-A caching service using [Gin](https://github.com/gin-gonic/gin) + [Redis](https://redis.io/) with docker-compose
+A caching service using Go's standard library HTTP server + [Redis](https://redis.io/) with docker-compose
 
 This service is used to cache all GraphQL responses from the main [Tarkov API](https://github.com/the-hideout/tarkov-api) in order to provide maximum performance ⚡
 

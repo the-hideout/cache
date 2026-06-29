@@ -177,15 +177,15 @@ else
   echo -e "❌ ${BLUE}/api/cache${OFF} POST invalid TTL ${RED}failed (expected 400, got $status_code)${OFF}"
 fi
 
-# Test POST /api/cache with negative TTL (should accept, as strconv.Atoi allows negative numbers)
+# Test POST /api/cache with negative TTL (should return 400)
 response=$(curl --insecure --location --request POST "http://localhost:${HTTP_PORT}/api/cache" --header 'Content-Type: application/json' --data-raw '{"key": "negttlkey", "value": "test", "ttl": "-1"}' -w "%{http_code}" -s)
 status_code=$(echo "$response" | sed 's/.*\([0-9][0-9][0-9]\)$/\1/')
 
-if [[ $status_code -eq 200 ]]; then
+if [[ $status_code -eq 400 ]]; then
   echo -e "✅ ${BLUE}/api/cache${OFF} POST negative TTL ${GREEN}passed${OFF}"
 else
   SUCCESS="false"
-  echo -e "❌ ${BLUE}/api/cache${OFF} POST negative TTL ${RED}failed (expected 200, got $status_code)${OFF}"
+  echo -e "❌ ${BLUE}/api/cache${OFF} POST negative TTL ${RED}failed (expected 400, got $status_code)${OFF}"
 fi
 
 echo -e "\n${PURPLE}=== CACHE FUNCTIONALITY TESTS ===${OFF}"
@@ -308,24 +308,15 @@ else
   echo -e "❌ ${BLUE}/api/cache${OFF} POST large value (20KB) ${RED}failed (expected 200, got $status_code)${OFF}"
 fi
 
-# Test POST with zero TTL (Redis treats 0 as no expiration)
+# Test POST with zero TTL (should return 400)
 response=$(curl --insecure --location --request POST "http://localhost:${HTTP_PORT}/api/cache" --header 'Content-Type: application/json' --data-raw '{"key": "zerottl", "value": "zero ttl test", "ttl": "0"}' -w "%{http_code}" -s)
 status_code=$(echo "$response" | sed 's/.*\([0-9][0-9][0-9]\)$/\1/')
 
-if [[ $status_code -eq 200 ]]; then
+if [[ $status_code -eq 400 ]]; then
   echo -e "✅ ${BLUE}/api/cache${OFF} POST zero TTL ${GREEN}passed${OFF}"
 else
-  echo -e "❌ ${BLUE}/api/cache${OFF} POST zero TTL ${RED}failed (expected 200, got $status_code)${OFF}"
-fi
-
-# Test GET for zero TTL key (should exist since Redis treats 0 as no expiration)
-response=$(curl --insecure --location --request GET "http://localhost:${HTTP_PORT}/api/cache?key=zerottl" -w "%{http_code}" -s)
-status_code=$(echo "$response" | sed 's/.*\([0-9][0-9][0-9]\)$/\1/')
-
-if [[ $status_code -eq 200 ]]; then
-  echo -e "✅ ${BLUE}/api/cache?key=zerottl${OFF} GET zero TTL key ${GREEN}passed${OFF}"
-else
-  echo -e "❌ ${BLUE}/api/cache?key=zerottl${OFF} GET zero TTL key ${RED}failed (expected 200, got $status_code)${OFF}"
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache${OFF} POST zero TTL ${RED}failed (expected 400, got $status_code)${OFF}"
 fi
 
 # Test POST with fractional TTL string (should fail since strconv.Atoi doesn't handle floats)
@@ -625,27 +616,15 @@ else
   echo -e "❌ ${BLUE}/api/cache${OFF} POST large TTL ${RED}failed${OFF}"
 fi
 
-# Test zero TTL (immediate expiration)
+# Test zero TTL (should return 400)
 response=$(curl --insecure --location --request POST "http://localhost:${HTTP_PORT}/api/cache" --header 'Content-Type: application/json' --data-raw '{"key": "zerottlkey", "value": "zero ttl", "ttl": "0"}' -w "%{http_code}" -s)
 status_code=$(echo "$response" | sed 's/.*\([0-9][0-9][0-9]\)$/\1/')
 
-if [[ $status_code -eq 200 ]]; then
+if [[ $status_code -eq 400 ]]; then
   echo -e "✅ ${BLUE}/api/cache${OFF} POST zero TTL ${GREEN}passed${OFF}"
-  
-  # Note: Redis treats TTL of 0 as "no expiration" rather than immediate expiration
-  # Let's test that the key exists with no TTL
-  response=$(curl --insecure --location --request GET "http://localhost:${HTTP_PORT}/api/cache?key=zerottlkey" -w "%{http_code}" -s)
-  status_code=$(echo "$response" | sed 's/.*\([0-9][0-9][0-9]\)$/\1/')
-  
-  if [[ $status_code -eq 200 ]]; then
-    echo -e "✅ ${BLUE}/api/cache?key=zerottlkey${OFF} GET zero TTL key exists ${GREEN}passed${OFF}"
-  else
-    SUCCESS="false"
-    echo -e "❌ ${BLUE}/api/cache?key=zerottlkey${OFF} GET zero TTL key ${RED}failed (expected 200, got $status_code)${OFF}"
-  fi
 else
   SUCCESS="false"
-  echo -e "❌ ${BLUE}/api/cache${OFF} POST zero TTL ${RED}failed${OFF}"
+  echo -e "❌ ${BLUE}/api/cache${OFF} POST zero TTL ${RED}failed (expected 400, got $status_code)${OFF}"
 fi
 
 # Test short TTL (1 second) for actual expiration
@@ -1420,10 +1399,11 @@ echo -e "\n${PURPLE}=== EXTREME TTL EDGE CASES ===${OFF}"
 response=$(curl --insecure --location --request POST "http://localhost:${HTTP_PORT}/api/cache" --header 'Content-Type: application/json' --data-raw '{"key": "negativettl", "value": "negative ttl test", "ttl": "-100"}' -w "%{http_code}" -s)
 status_code=$(echo "$response" | sed 's/.*\([0-9][0-9][0-9]\)$/\1/')
 
-if [[ $status_code -eq 400 || $status_code -eq 200 ]]; then
-  echo -e "ℹ️  ${BLUE}/api/cache${OFF} POST negative TTL result: $status_code"
+if [[ $status_code -eq 400 ]]; then
+  echo -e "✅ ${BLUE}/api/cache${OFF} POST negative TTL ${GREEN}passed${OFF}"
 else
-  echo -e "❌ ${BLUE}/api/cache${OFF} POST negative TTL ${RED}unexpected status $status_code${OFF}"
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache${OFF} POST negative TTL ${RED}failed (expected 400, got $status_code)${OFF}"
 fi
 
 # Test with TTL as string with leading zeros
@@ -1440,10 +1420,11 @@ fi
 response=$(curl --insecure --location --request POST "http://localhost:${HTTP_PORT}/api/cache" --header 'Content-Type: application/json' --data-raw '{"key": "numericttl", "value": "numeric ttl", "ttl": 30}' -w "%{http_code}" -s)
 status_code=$(echo "$response" | sed 's/.*\([0-9][0-9][0-9]\)$/\1/')
 
-if [[ $status_code -eq 400 || $status_code -eq 200 ]]; then
-  echo -e "ℹ️  ${BLUE}/api/cache${OFF} POST numeric TTL (not string) result: $status_code"
+if [[ $status_code -eq 400 ]]; then
+  echo -e "✅ ${BLUE}/api/cache${OFF} POST numeric TTL ${GREEN}passed${OFF}"
 else
-  echo -e "❌ ${BLUE}/api/cache${OFF} POST numeric TTL ${RED}unexpected status $status_code${OFF}"
+  SUCCESS="false"
+  echo -e "❌ ${BLUE}/api/cache${OFF} POST numeric TTL ${RED}failed (expected 400, got $status_code)${OFF}"
 fi
 
 echo -e "\n${PURPLE}=== HTTP PROTOCOL EDGE CASES ===${OFF}"

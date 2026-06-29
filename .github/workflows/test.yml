@@ -14,6 +14,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # pin@v6
+        with:
+          persist-credentials: false
 
       - name: setup go
         uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # pin@v6
@@ -22,6 +24,12 @@ jobs:
 
       - name: bootstrap
         run: script/bootstrap
+
+      - name: lint
+        run: script/lint
+
+      - name: build
+        run: script/build
     
       - name: test
         run: script/test

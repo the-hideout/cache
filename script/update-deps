@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+source script/env "$@"
+
+cd "$CACHE_GO_DIR"
+
+go_cmd=(go)
+if command -v sfw >/dev/null 2>&1 && sfw --help 2>&1 | grep -qi ' go '; then
+  go_cmd=(sfw go)
+elif [[ "${ALLOW_UNPROTECTED_GO_DEPS:-}" != "1" ]]; then
+  echo -e "${RED}❌ Socket Firewall does not advertise Go support on this host.${OFF}"
+  echo "Set ALLOW_UNPROTECTED_GO_DEPS=1 only after explicitly approving an unprotected Go dependency refresh."
+  exit 1
+fi
+
+export GOPROXY="${CACHE_UPDATE_GOPROXY:-https://proxy.golang.org,direct}"
+export GOSUMDB="${CACHE_UPDATE_GOSUMDB:-sum.golang.org}"
+export GOFLAGS=""
+
+if [[ "$#" -gt 0 ]]; then
+  "${go_cmd[@]}" get "$@"
+fi
+
+"${go_cmd[@]}" mod tidy
+"${go_cmd[@]}" mod vendor
+
+echo -e "${GREEN}✅ Dependency update complete${OFF}"
