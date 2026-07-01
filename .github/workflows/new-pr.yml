@@ -20,7 +20,7 @@ jobs:
         with:
           persist-credentials: false
       - name: comment
-        uses: GrantBirki/comment@f524ee31407667c05061bad41e1758b40298bd82 # pin@v2.1.0
+        uses: GrantBirki/comment@3439715f0cf3b8fc29bf47be0e3226679c06c41a # pin@v3.0.0
         continue-on-error: true
         with:
           file: .github/new-pr-comment.md
