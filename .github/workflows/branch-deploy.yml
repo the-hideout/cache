@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: github/branch-deploy@fded0351b6b79f854b335c11b3d93063461dd288 # pin@v11.1.2
+      - uses: github/branch-deploy@de4d10ee17c3117a2076aff489ba03fadf225f35 # pin@v11.1.5
         id: branch-deploy
         with:
           admins: GrantBirki,Razzmatazzz
@@ -37,14 +37,14 @@ jobs:
 
       - name: checkout
         if: ${{ steps.branch-deploy.outputs.continue == 'true' }}
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # pin@v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # pin@v6
         with:
           persist-credentials: false
           ref: ${{ steps.branch-deploy.outputs.sha }}
 
       - name: SSH Remote Deploy
         if: ${{ steps.branch-deploy.outputs.continue == 'true' && steps.branch-deploy.outputs.noop != 'true' }}
-        uses: appleboy/ssh-action@2ead5e36573f08b82fbfce1504f1a4b05a647c6f # pin@v1.2.2
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # pin@v1.2.5
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
